@@ -39,7 +39,7 @@ import urlparse
 __version__ = "$Revision$"
 # $Source$
 
-VERSION = '0.8.7'
+VERSION = "0.8.9"
 
 archs = {
     'alpha': ('alpha', 'alphaev5', 'alphaev56', 'alphaev6', 'alphaev67'),
@@ -747,7 +747,7 @@ class Repo:
                 elif s in ('you', ):
                     mirroryouget(url, self.srcdir, self.dist)
                 elif s in ('reposync', 'reposyncs', 'reposyncf'):
-                    mirrorreposync(url, self.srcdir, '%s-%s' % (self.dist.nick, self.name))
+                    mirrorreposync(url, self.srcdir, '%s-%s' % (self.dist.nick, self.name), self.dist)
                 else:
                     error(2, 'Scheme %s:// not implemented yet (in %s)' % (s, url))
             except mrepoMirrorException, e:
@@ -1527,7 +1527,7 @@ def mirroryouget(url, path, dist):
         raise(mrepoMirrorException('Failed with return code: %s' % ret))
 
 
-def mirrorreposync(url, path, reponame):
+def mirrorreposync(url, path, reponame, dist):
     "Mirror everything from a reposync:// URL"
     if not cf.cmd['reposync']:
         error(1, 'reposync was not found. reposync support is therefore disabled.')
@@ -1554,19 +1554,25 @@ def mirrorreposync(url, path, reponame):
         opts = opts + ' --newest-only'
 
     # store a temporary YUM config to use with reposync
-    reposync_conf_contents = """[%s]
-name=%s
-baseurl=%s
-enabled=1
-exclude=%s
-""" % (reponame, reponame, url, reposync_exclude)
+    reposync_conf_contents = "[%s]\n" % reponame
+    reposync_conf_contents += "name=%s\n" % reponame
+    reposync_conf_contents += "baseurl=%s\n" % url
+    reposync_conf_contents += "enabled=1\n"
+    if dist.sslca:
+    	reposync_conf_contents += "sslcacert=%s\n" % dist.sslca
+
+    if dist.sslcert:
+    	reposync_conf_contents += "sslclientcert=%s\n" % dist.sslcert
+
+    if dist.sslkey:
+    	reposync_conf_contents += "sslclientkey=%s\n" % dist.sslkey
 
     (fd, reposync_conf_file) = tempfile.mkstemp(text=True)
     handle = os.fdopen(fd, 'w')
     handle.writelines(reposync_conf_contents)
     handle.close()
 
-    ret = run("%s %s -t -c '%s' -r %s -p '%s'" % \
+    ret = run("%s %s -e /var/mrepo/reposync -c '%s' -r %s -p '%s'" % \
               (cf.cmd['reposync'], opts, reposync_conf_file, reponame, path))
 
     # remove the temporary config
