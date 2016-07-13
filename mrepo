@@ -253,6 +253,7 @@ class Config:
         self.reposynccleanup = self.getoption('main', 'reposync-cleanup', 'yes') not in disable
         self.reposyncnewestonly = self.getoption('main', 'reposync-newest-only', 'no') not in disable
         self.reposyncexcldebug = self.getoption('main','reposync-exclude-debug', 'yes') not in disable
+        self.reposyncnorepopath = self.getoption('main','reposync-no-repopath', 'yes') not in disable
 
         self.rhnlogin = self.getoption('main', 'rhnlogin', None)
         self.rhngetoptions = self.getoption('main', 'rhnget-options', '')
@@ -1552,6 +1553,8 @@ def mirrorreposync(url, path, reponame, dist):
         opts = opts + ' --delete'
     if cf.reposyncnewestonly:
         opts = opts + ' --newest-only'
+    if cf.reposyncnorepopath:
+        opts = opts + ' --norepopath'
 
     # store a temporary YUM config to use with reposync
     reposync_conf_contents = "[%s]\n" % reponame
@@ -1560,10 +1563,8 @@ def mirrorreposync(url, path, reponame, dist):
     reposync_conf_contents += "enabled=1\n"
     if dist.sslca:
     	reposync_conf_contents += "sslcacert=%s\n" % dist.sslca
-
     if dist.sslcert:
     	reposync_conf_contents += "sslclientcert=%s\n" % dist.sslcert
-
     if dist.sslkey:
     	reposync_conf_contents += "sslclientkey=%s\n" % dist.sslkey
 
@@ -1571,6 +1572,8 @@ def mirrorreposync(url, path, reponame, dist):
     handle = os.fdopen(fd, 'w')
     handle.writelines(reposync_conf_contents)
     handle.close()
+
+    print 'reposynconf: %s' % reposync_conf_contents
 
     ret = run("%s %s -e /var/mrepo/reposync -c '%s' -r %s -p '%s'" % \
               (cf.cmd['reposync'], opts, reposync_conf_file, reponame, path))
