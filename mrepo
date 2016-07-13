@@ -1573,10 +1573,8 @@ def mirrorreposync(url, path, reponame, dist):
     handle.writelines(reposync_conf_contents)
     handle.close()
 
-    print 'reposynconf: %s' % reposync_conf_contents
-
-    ret = run("%s %s -e /var/mrepo/reposync -c '%s' -r %s -p '%s'" % \
-              (cf.cmd['reposync'], opts, reposync_conf_file, reponame, path))
+    ret = run("%s %s -e %s/reposync -c '%s' -r %s -p '%s'" % \
+              (cf.cmd['reposync'], opts, cf.cachedir, reposync_conf_file, reponame, path))
 
     # remove the temporary config
     os.remove(reposync_conf_file)
