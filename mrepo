@@ -254,6 +254,8 @@ class Config:
         self.reposyncnewestonly = self.getoption('main', 'reposync-newest-only', 'no') not in disable
         self.reposyncexcldebug = self.getoption('main','reposync-exclude-debug', 'yes') not in disable
         self.reposyncnorepopath = self.getoption('main','reposync-no-repopath', 'yes') not in disable
+        self.reposynctimeout = self.getoption('main','reposync-timeout', '90') 
+        self.reposyncminrate = self.getoption('main','reposync-minrate', '250')
 
         self.rhnlogin = self.getoption('main', 'rhnlogin', None)
         self.rhngetoptions = self.getoption('main', 'rhnget-options', '')
@@ -1567,6 +1569,11 @@ def mirrorreposync(url, path, reponame, dist):
     	reposync_conf_contents += "sslclientcert=%s\n" % dist.sslcert
     if dist.sslkey:
     	reposync_conf_contents += "sslclientkey=%s\n" % dist.sslkey
+    if cf.reposynctimeout:
+    	reposync_conf_contents += "timeout=%s\n" % cf.reposynctimeout
+    if cf.reposyncminrate:
+    	reposync_conf_contents += "minrate=%s\n" % cf.reposyncminrate
+
 
     (fd, reposync_conf_file) = tempfile.mkstemp(text=True)
     handle = os.fdopen(fd, 'w')
