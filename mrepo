@@ -289,7 +289,7 @@ class Config:
             configfh = urllib.urlopen(configfile)
             try:
                 self.cfg.readfp(configfh)
-            except ConfigParser.MissingSectionHeaderError, e:
+            except ConfigParser.MissingSectionHeaderError:
                 die(6, 'Error accessing URL: %s' % configfile)
         else:
             if os.access(configfile, os.R_OK):
