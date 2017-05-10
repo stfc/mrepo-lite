@@ -81,6 +81,7 @@ class Options:
         self.update = False
         self.verbose = 1
         self.htmlindex = False
+        self.create_aggregate_repos = False
 
         try:
             opts, args = getopt.getopt(args, 'c:d:fghnqr:t:uvx',
@@ -1634,7 +1635,8 @@ def rpmlink((dist, repo), dirpath, filelist):
                 os.path.walk(src, rpmlink, (dist, repo))
             elif regexp.match(file, 1):
                 symlink(src, os.path.join(dist.dir, 'RPMS.' + repo))
-                symlink(src, os.path.join(dist.dir, 'RPMS.all'))
+                if op.create_aggregate_repos:
+                    symlink(src, os.path.join(dist.dir, 'RPMS.all'))
 
 
 def which(cmd):
