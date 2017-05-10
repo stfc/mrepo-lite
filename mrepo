@@ -254,7 +254,7 @@ class Config:
         self.reposyncnewestonly = self.getoption('main', 'reposync-newest-only', 'no') not in disable
         self.reposyncexcldebug = self.getoption('main','reposync-exclude-debug', 'yes') not in disable
         self.reposyncnorepopath = self.getoption('main','reposync-no-repopath', 'yes') not in disable
-        self.reposynctimeout = self.getoption('main','reposync-timeout', '90') 
+        self.reposynctimeout = self.getoption('main','reposync-timeout', '90')
         self.reposyncminrate = self.getoption('main','reposync-minrate', '250')
 
         self.rhnlogin = self.getoption('main', 'rhnlogin', None)
@@ -1376,14 +1376,14 @@ def mirrorlftp(url, path, dist):
     mkdir(path)
 
     cmds = cf.lftpcommands + ';'
-    
+
     if dist.sslcert:
         cmds = cmds + ' set ssl:cert-file ' + dist.sslcert + ';'
     if dist.sslkey:
-        cmds = cmds + ' set ssl:key-file ' + dist.sslkey + ';'    
+        cmds = cmds + ' set ssl:key-file ' + dist.sslkey + ';'
     if dist.sslca:
         cmds = cmds + ' set ssl:ca-file ' + dist.sslca + ' ;'
-    
+
 #   cmds = 'set dns:fatal-timeout 5'
     if cf.lftptimeout:
         cmds = cmds + ' set net:timeout %s;' % cf.lftptimeout
@@ -1545,7 +1545,7 @@ def mirrorreposync(url, path, reponame, dist):
         reposync_exclude = "*-debuginfo"
     else:
         reposync_exclude = ""
-        
+
     opts = cf.reposyncoptions
     if op.verbose < 3:
         opts = opts + ' -q'
