@@ -35,6 +35,7 @@ import sys
 import time
 import types
 import urlparse
+import urllib
 
 __version__ = "$Revision$"
 # $Source$
