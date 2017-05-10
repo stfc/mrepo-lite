@@ -284,8 +284,8 @@ class Config:
 
         info(4, 'Reading config file %s' % (configfile))
 
-        (s, b, p, q, f, o) = urlparse.urlparse(configfile)
-        if s in ('http', 'ftp', 'file'):
+        urlscheme = urlparse.urlparse(configfile)[0]
+        if urlscheme in ('http', 'ftp', 'file'):
             configfh = urllib.urlopen(configfile)
             try:
                 self.cfg.readfp(configfh)
