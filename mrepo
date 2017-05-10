@@ -277,7 +277,7 @@ class Config:
         self.alldists = []
         self.dists = []
 
-        self.update(op.configfile)
+        self.update()
 
     def read(self, configfile):
         self.cfg = ConfigParser.ConfigParser()
@@ -300,7 +300,7 @@ class Config:
             else:
                 die(6, 'Error accessing file: %s' % configfile)
 
-    def update(self, configfile):
+    def update(self):
         for section in ('variables', 'vars', 'DEFAULT'):
             if section in self.cfg.sections():
                 for option in self.cfg.options(section):
@@ -1675,7 +1675,7 @@ def readconfig():
         files.sort()
         for configfile in files:
             cf.read(configfile)
-            cf.update(configfile)
+            cf.update()
     return cf
 
 
