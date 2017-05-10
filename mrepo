@@ -1306,6 +1306,11 @@ def mirrorrsync(url, path):
     if not cf.cmd['rsync']:
         error(1, 'rsync was not found. rsync support is therefore disabled.')
         return
+
+    # Ensure both source and destination paths end with a trailing slash
+    url = url.rstrip('/') + '/'
+    path = os.path.join(path, '')
+
     mkdir(path)
 
     opts = cf.rsyncoptions
