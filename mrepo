@@ -267,6 +267,8 @@ class Config:
 
         self.rsyncbwlimit = self.getoption('main', 'rsync-bandwidth-limit', None)
         self.rsynccleanup = self.getoption('main', 'rsync-cleanup', 'yes') not in disable
+        self.rsyncexclheaders = self.getoption('main', 'rsync-exclude-headers', 'yes') not in disable
+        self.rsyncexclrepodata = self.getoption('main', 'rsync-exclude-repodata', 'yes') not in disable
         self.rsyncexcldebug = self.getoption('main', 'rsync-exclude-debug', 'yes') not in disable
         self.rsyncexclsrpm = self.getoption('main', 'rsync-exclude-srpm', 'yes') not in disable
         self.rsyncoptions = self.getoption('main', 'rsync-options', '-rtHL --partial')
@@ -1335,7 +1337,10 @@ def mirrorrsync(url, path):
         opts = opts + ' --delete-after --delete-excluded'
     if cf.rsyncbwlimit:
         opts = opts + ' --bwlimit=%s' % cf.rsyncbwlimit
-    opts = opts + ' --exclude=\"/headers/\" --exclude=\"/repodata/\"'
+    if cf.rsyncexclheaders:
+        opts = opts + ' --exclude=\"/headers/\"'
+    if cf.rsyncexclrepodata:
+        opts = opts + ' --exclude=\"/repodata/\"'
     if cf.rsyncexclsrpm:
         opts = opts + ' --exclude=\"*.src.rpm\" --exclude=\"/SRPMS/\"'
     if cf.rsyncexcldebug:
