@@ -122,7 +122,7 @@ class Options:
                 self.update = True
 
         if not self.types:
-            self.types = ['file', 'fish', 'ftp', 'http', 'https', 'mc',
+            self.types = ['file', 'fish', 'ftp', 'http', 'https',
                           'rsync', 'sftp', 'reposync', 'reposyncs',
                           'reposyncf']
 
@@ -159,7 +159,7 @@ mrepo options:
   -n, --dry-run           show what would have been done
   -q, --quiet             minimal output
   -r, --repo=repo1,repo2  restrict action to specific repositories
-  -t, --type=type1,type2  mirror types to use. Default: file, fish, ftp, http, https, mc, rsync, sftp
+  -t, --type=type1,type2  mirror types to use. Default: file, fish, ftp, http, https, rsync, sftp
   -u, --update            fetch OS updates
   -v, --verbose           increase verbosity
       --version           print mrepo version information
@@ -204,7 +204,6 @@ class Config:
         self.cmd['hardlink++'] = self.getoption('main', 'hardlinkcppcmd', '/usr/bin/hardlink++')
         self.cmd['hardlinkpy'] = self.getoption('main', 'hardlinkpycmd', '/usr/bin/hardlinkpy')
         self.cmd['lftp'] = self.getoption('main', 'lftpcmd', '/usr/bin/lftp')
-        self.cmd['mirrordir'] = self.getoption('main', 'mirrordircmd', '/usr/bin/mirrordir')
         self.cmd['repoview'] = self.getoption('main', 'repoviewcmd', '/usr/bin/repoview')
         self.cmd['reposync'] = self.getoption('main', 'reposynccmd', '/usr/bin/reposync')
         self.cmd['rsync'] = self.getoption('main', 'rsynccmd', '/usr/bin/rsync')
@@ -220,11 +219,6 @@ class Config:
         self.lftpcommands = self.getoption('main', 'lftp-commands', '')
         self.lftpmirroroptions = self.getoption('main', 'lftp-mirror-options', '-c')
         self.lftptimeout = self.getoption('main', 'lftp-timeout', None)
-
-        self.mirrordircleanup = self.getoption('main', 'mirrordir-cleanup', 'yes') not in disable
-        self.mirrordirexcldebug = self.getoption('main', 'mirrordir-exclude-debug', 'yes') not in disable
-        self.mirrordirexclsrpm = self.getoption('main', 'mirrordir-exclude-srpm', 'yes') not in disable
-        self.mirrordiroptions = self.getoption('main', 'mirrordir-options', '')
 
         self.reposyncoptions = self.getoption('main', 'reposync-options', '')
         self.reposynccleanup = self.getoption('main', 'reposync-cleanup', 'yes') not in disable
@@ -517,17 +511,10 @@ class Repo:
                     continue
                 if s in ('rsync', ):
                     mirrorrsync(url, self.srcdir)
-                elif s in ('ftp', ):
-                    if cf.cmd['mirrordir']:
-                        mirrormirrordir(url, self.srcdir)
-                    else:
-                        mirrorlftp(url, self.srcdir, self.dist)
-                elif s in ('fish', 'http', 'https', 'sftp'):
+                elif s in ('ftp', 'fish', 'http', 'https', 'sftp'):
                     mirrorlftp(url, self.srcdir, self.dist)
                 elif s in ('file', ''):
                     mirrorfile(url, self.srcdir)
-                elif s in ('mc', ):
-                    mirrormirrordir(url, self.srcdir)
                 elif s in ('reposync', 'reposyncs', 'reposyncf'):
                     mirrorreposync(url, self.srcdir, '%s-%s' % (self.dist.nick, self.name), self.dist)
                 else:
@@ -1077,33 +1064,6 @@ def mirrorrsync(url, path):
         opts = opts + ' --exclude=\"*.*\"'
 
     ret = run('%s %s %s %s' % (cf.cmd['rsync'], opts, url, path), dryrun=True)
-    if ret:
-        raise(mrepoMirrorException('Failed with return code: %s' % ret))
-
-
-def mirrormirrordir(url, path):
-    "Mirror everything from a ftp:// or mc:// URL"
-    if not cf.cmd['mirrordir']:
-        error(1, 'mirrordir was not found. ftp and mc support (using mirrordir) is therefore disabled.')
-        return
-    mkdir(path)
-
-    opts = cf.mirrordiroptions
-    if op.verbose >= 3:
-        opts = opts + ' -v' * (op.verbose - 3)
-    if op.dryrun:
-        opts = opts + ' --dry-run'
-    if cf.mirrordircleanup:
-        opts = opts + ' -k'
-
-#   opts = opts + ' -I \"*.rpm\"'
-    opts = opts + ' -G \"headers\" -G \"repodata\"'
-    if cf.mirrordirexclsrpm:
-        opts = opts + ' -G \"*.src.rpm\" -G \"SRPMS\"'
-    if cf.mirrordirexcldebug:
-        opts = opts + ' -G \"*-debuginfo-*.rpm\" -G \"debug\"'
-
-    ret = run("%s %s '%s' '%s'" % (cf.cmd['mirrordir'], opts, url, path), dryrun=True)
     if ret:
         raise(mrepoMirrorException('Failed with return code: %s' % ret))
 

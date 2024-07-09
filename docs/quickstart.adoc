@@ -18,7 +18,6 @@ Requisites:
 	tool		provides
 	""""		""""""""
 	rsync		provides rsync:// access
-	mirrordir	provides ftp:// and mc:// access
 	lftp		provides ftp://, http://, sftp:// fish://
 
   If you want to hardlink duplicate (downloaded) packages to save on

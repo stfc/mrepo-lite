@@ -145,10 +145,9 @@ mrepo can use several types of protocols or URL identifiers:
 	<empty>		- use the directory in $srcdir/$dist-$arch/$repo
 	file://		- handled by mrepo, symlink to other directory containing RPMS
 	fish://		- handled by lftp
-	ftp://		- handled by mirrordir or lftp
+	ftp://		- handled by lftp
 	http://		- handled by lftp
 	https://	- handled by lftp
-	mc://		- handled by mirrordir
 	reposync://	- handled by reposync (HTTP)
 	reposyncs://	- handled by reposync (HTTPS)
 	rsync://	- handled by rsync
