@@ -1383,8 +1383,6 @@ def mirrorlftp(url, path, dist):
 def mirrorfile(url, path):
     "Mirror everything from a file:// URL by symlinking"
     dir = url.replace('file://', '')
-#   while dir.endswith('/'):
-#       dir = dir[0:-1]
     if os.path.isdir(dir):
         symlink(dir, path)
 #   else: ### FIXME: Only if ISO file
