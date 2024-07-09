@@ -17,7 +17,6 @@ mandir = $(datadir)/man
 localstatedir = /var
 
 httpddir = $(sysconfdir)/httpd/conf.d
-initrddir = $(sysconfdir)/rc.d/init.d
 
 cachedir = $(localstatedir)/cache/mrepo
 htmldir = $(datadir)/mrepo/html
@@ -43,7 +42,6 @@ install:
 	[ ! -f $(DESTDIR)$(sysconfdir)/mrepo.conf ] && install -D -m0600 config/mrepo.conf $(DESTDIR)$(sysconfdir)/mrepo.conf || :
 	install -d -m0755 $(DESTDIR)$(sysconfdir)/mrepo.conf.d/
 	install -Dp -m0644 config/httpd/mrepo.conf $(DESTDIR)$(httpddir)/mrepo.conf
-	install -Dp -m0755 config/mrepo $(DESTDIR)$(initrddir)/mrepo
 
 	install -d -m0755 $(DESTDIR)$(htmldir)
 	install -p -m0644 html/* $(DESTDIR)$(htmldir)
