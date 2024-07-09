@@ -996,10 +996,6 @@ class Repo:
             ret = run('%s %s --title="%s" %s' % (cf.cmd['repoview'], opts, title, self.wwwdir))
             if ret:
                 raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['repoview'], ret)))
-#           url = 'http://mrepo/%s/RPMS.%s/' % (self.dist.nick, self.name)
-#           ret = run('%s %s --url="%s" %s' % (cf.cmd['repoview'], opts, url, self.wwwdir))
-#           if ret:
-#               raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['repoview'], ret)))
 
 
 class mySet:
