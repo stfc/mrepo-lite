@@ -1204,9 +1204,6 @@ def symlink(src, dst):
             return
         os.rename(dst, dst + '.mrepobak')
 
-### Not using filecmp increases speed with 15%
-#   if os.path.isfile(dst) and filecmp.cmp(src, dst) == 0:
-
     src = relpath(src, dst)
 
     if not os.path.isdir(os.path.dirname(dst)):
