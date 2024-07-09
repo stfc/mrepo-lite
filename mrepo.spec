@@ -27,8 +27,7 @@ Obsoletes: yam <= %{version}
 
 %description
 mrepo builds a local Apt/Yum RPM repository from local ISO files,
-downloaded updates and extra packages from RHN and 3rd party
-repositories.
+downloaded updates and extra packages from 3rd party repositories.
 
 It can download all updates and extras automatically, creates
 the repository structure and meta-data, enables HTTP access to 
