@@ -8,7 +8,7 @@ Finding help on the command line
 --------------------------------
 mrepo -h
 usage: mrepo [-g] [-q] [-u] [-v] [-c config] dist1 dist2-arch
-Set up a distribution server from ISO files
+Set up a distribution server
 
 mrepo options:
   -c, --config=file     specify alternative configfile
@@ -17,7 +17,6 @@ mrepo options:
   -u, --update          fetch OS updates
   -v, --verbose         increase verbosity (only mrepo info)
   -vv, -vvv             increase verbosity more
-      --unmount         unmount distributions
 
 
 When you first run mrepo, do:
@@ -30,21 +29,13 @@ to see more of mrepo's internals.
 	mrepo -vvv
 
 Now, you may want to change the default mrepo.conf to your needs and
-add or remove distributions and/or repositories. If you have ISO
-images of any of the distributions you want to mirror, mention them
-too like in the examples, and copy them over to /var/mrepo/iso
-(You can also decide to put them per distribution/arch)
+add or remove distributions and/or repositories.
 
 The default directory structure that mrepo uses is explained in
 README.dirs
 
-mrepo by default will mount as many ISO files as possible. If you
-have problems with the maximum number of loop devices, please read
-README.loop
-
-mrepo can also download the distribution RPM packages if you want to,
-if you did not specify any ISO images it will download any os or core
-repositories that you have specified. To do that, do
+mrepo will download the distribution RPM packages if you want to.
+To do that, do
 
 	mrepo -u
 or
@@ -60,13 +51,8 @@ or
 This will look for all the necessary packages in /var/mrepo (srcdir) and
 symlink them to /var/www/mrepo (wwwdir). /var/www/mrepo can also be removed
 at any time and should not contain any files you have put there yourself.
-
-To start off from scratch, first unmount the ISO images by doing:
-
-	mrepo --unmount
-
-and then remove /var/www/mrepo completely. This should never be needed,
-but can be done after you played around or when removing components.
+This should never be needed, but can be done after you played around or when
+removing components.
 
 If you want to update only a part of your repository, you can select
 the distributions by doing:
@@ -124,7 +110,6 @@ with a little example:
 	name = Fedora Core $release ($arch)
 	release = 3
 	arch = i386 x86_64
-	iso = FC$release-$arch-disc?.iso
 	core = rsync://ayo.freshrpms.net/pub/freshrpms/pub/freshrpms/ayo/fedora/linux/$release/$arch/RPMS.$repo/
 	updates = rsync://ayo.freshrpms.net/pub/freshrpms/pub/freshrpms/ayo/fedora/linux/$release/$arch/RPMS.$repo/
 	rpmforge = rsync://apt.sw.be/pub/freshrpms/pub/dag/fedora/$release/en/$arch/RPMS.dag/
@@ -138,12 +123,10 @@ Other tags you can include per section are:
 	release = is the release version of your distribution ($release)
 	metadata = is a list of metadata you want for this repo
 	arch = is set to one or more architectures available for this distribution ($arch)
-	iso = is set to one or more globs matching the distributions ISO images
 
 Any other entries are considered to be repositories. mrepo will assume that
 repositories called 'os', 'core' and 'updates' are base system repositories
-and these will be updated with mrepo option -u . os and core repositories will
-be ignored when ISO images are available.
+and these will be updated with mrepo option -u .
 
 Other entries are considered extra (3rd party) repositories. mrepo will create
 a separate directory for each of these in /var/mrepo/$dist-$arch/$repo

@@ -15,7 +15,6 @@ contact me as well. :) Send an email to: Dag Wieers <dag@wieers.com>
 + Add libcurl support and (optionally?) make it the default 
 + NFS support enable by default, using autofs (waiting for Serge Sterckx)
 + Add support for SRPM files (just put them into one directory /SRPMS)
-+ Allow to symlink the whole ISO disc in order to replace package-lists
 + Check files that do not match the regexp and compare filename to rpm headers
 + Make rsync/lftp download requests from the same server into 1 request (hardlinks)
 + Use mirrorlist option from .repo files as a source (for http)
@@ -33,14 +32,6 @@ contact me as well. :) Send an email to: Dag Wieers <dag@wieers.com>
 
 ### Configuration
 + Allow to specify rsync/lftp options on a per distribution basis (see ~/.lftp/rc)
-+ Get rid of iso= and allow each repo to include ISOs (eg. file:///mnt/iso/*.iso)
-  This would be very useful to have a separate gfs, lacd, rhaps, rhds2 CD repo
-+ Allow the following ISO definitions:
-
-	iso = http://mirror.centos.org/pub/centos/$release/isos/$arch/CentOS-$release-$arch-bin?of3.iso
-	iso = file:///mnt/iso/*.iso
-	iso = fedora/fc$release-$arch/FC-$release-$arch-disc?.iso"
-
 + Add more working distributions to /etc/mrepo.conf.d/
 
 ### Usability
