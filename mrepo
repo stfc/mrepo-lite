@@ -1353,7 +1353,6 @@ def mirrorlftp(url, path, dist):
     if dist.sslca:
         cmds = cmds + ' set ssl:ca-file ' + dist.sslca + ' ;'
 
-#   cmds = 'set dns:fatal-timeout 5'
     if cf.lftptimeout:
         cmds = cmds + ' set net:timeout %s;' % cf.lftptimeout
     if cf.lftpbwlimit:
