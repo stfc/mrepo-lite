@@ -1086,7 +1086,6 @@ def run(str, dryrun=False):
         str = str + ' >/dev/null'
     if not op.dryrun or dryrun:
         info(5, 'Execute: %s' % str)
-#       os.popen(str, 'w')
         return os.system(str)
     else:
         info(1, 'Not execute: %s' % str)
