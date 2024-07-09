@@ -405,11 +405,6 @@ class Dist:
         self.sslkey = None
         self.sslca = None
 
-#   def __repr__(self):
-#       for key, value in vars(self).iteritems():
-#           if isinstance(value, types.StringType):
-#               print key, '->', value
-
     def rewrite(self):
         "Rewrite (string) attributes to replace variables by other (string) attributes"
         varlist = variables
