@@ -766,14 +766,6 @@ class Repo:
         "Capture a list of packages in the repository"
         filelist = set()
 
-        ### os.walk() is a python 2.4 feature
-#       for root, dirs, files in os.walk(self.srcdir):
-#           for file in files:
-#               if os.path.exists(file) and file.endswith('.rpm'):
-#                   size = os.stat(os.path.join(root, file)).st_size
-#                   filelist.add( (file, size) )
-
-        ### os.path.walk() goes back further
         def addfile((filelist, ), path, files):
             for file in files:
                 if os.path.exists(os.path.join(path, file)) and file.endswith('.rpm'):
