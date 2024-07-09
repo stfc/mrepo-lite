@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the GNU Library General Public License as published by
@@ -897,29 +897,7 @@ class Repo:
         if not cf.cmd['createrepo']:
             raise mrepoGenerateException('Command createrepo is not found. Skipping.')
 
-        ### Find the createrepo version we are using (due to groupfile usage changes)
-        createrepo_version = None
         groupfilename = 'comps.xml'
-
-        sys.path.append("/usr/share/createrepo")
-        try:
-            try:
-                import createrepo
-                createrepo_version = createrepo.__version__
-                del createrepo
-            except ImportError:
-                import genpkgmetadata
-                createrepo_version = genpkgmetadata.__version__
-                del genpkgmetadata
-        except ImportError:
-            pass
-        sys.path.remove("/usr/share/createrepo")
-
-        ### If version < 0.4.6, then use the old createrepo behaviour
-        if not createrepo_version:
-            error(0, '%s: Version of createrepo could not be found. Assuming newer than 0.4.6.' % self.dist.nick)
-        elif vercmp(createrepo_version, '0.4.6') < 0:
-            groupfilename = 'RPMS.%s/comps.xml' % self.name
 
         opts = ' ' + cf.createrepooptions
         if op.force:
@@ -1593,7 +1571,7 @@ def mirrorreposync(url, path, reponame, dist):
     handle.writelines(reposync_conf_contents)
     handle.close()
 
-    ret = run("%s %s -e %s/reposync -c '%s' -r %s -p '%s'" % \
+    ret = run("%s %s --metadata-path %s/reposync --config '%s' --repoid %s --download-path '%s'" % \
               (cf.cmd['reposync'], opts, cf.cachedir, reposync_conf_file, reponame, path))
 
     # remove the temporary config

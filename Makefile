@@ -38,9 +38,7 @@ all:
 	@echo "There is nothing to be build. Try install !"
 
 install:
-	install -Dp -m0755 gensystemid $(DESTDIR)$(bindir)/gensystemid
 	install -Dp -m0755 mrepo $(DESTDIR)$(bindir)/mrepo
-	install -Dp -m0755 rhnget $(DESTDIR)$(bindir)/rhnget
 	install -Dp -m0755 youget $(DESTDIR)$(bindir)/youget
 	[ ! -f $(DESTDIR)$(sysconfdir)/mrepo.conf ] && install -D -m0600 config/mrepo.conf $(DESTDIR)$(sysconfdir)/mrepo.conf || :
 	install -d -m0755 $(DESTDIR)$(sysconfdir)/mrepo.conf.d/
@@ -53,12 +51,6 @@ install:
 	install -d -m0755 $(DESTDIR)$(srcdir)/all/
 	install -d -m0755 $(DESTDIR)$(wwwdir)
 	install -d -m0755 $(DESTDIR)$(cachedir)
-
-	install -d -m0755 $(DESTDIR)$(datadir)/mrepo/rhn/
-	install -d -m0755 $(DESTDIR)$(datadir)/mrepo/up2date_client/repoBackends/
-	cp -av rhn/README rhn/*.py $(DESTDIR)$(datadir)/mrepo/rhn/
-	cp -av up2date_client/README up2date_client/*.py $(DESTDIR)$(datadir)/mrepo/up2date_client/
-	cp -av up2date_client/repoBackends/*.py $(DESTDIR)$(datadir)/mrepo/up2date_client/repoBackends/
 
 	[ "$(DESTDIR)" -o ! -f "$(DESTDIR)$(sysconfdir)/cron.d/mrepo" ] && install -Dp -m0644 config/mrepo.cron $(DESTDIR)$(sysconfdir)/cron.d/mrepo || :
 
