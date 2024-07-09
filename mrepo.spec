@@ -2,7 +2,7 @@
 # Authority: dag
 # Upstream: Dag Wieers <dag$wieers,com>
 
-Summary: Set up repositories from various sources (ISO, RHN, YOU, rsync, http, ftp, ...)
+Summary: Set up repositories from various sources (ISO, rsync, http, ftp, ...)
 Name: mrepo
 Version: 0.8.8
 Release: 1
@@ -66,8 +66,6 @@ arch = i386
 mailto = root@localhost
 smtp-server = localhost
 
-#rhnlogin = username:password
-
 ### Any other section is considered a definition for a distribution
 ### You can put distribution sections in /etc/mrepo.conf.d/
 ### Examples can be found in the documentation at:
@@ -106,8 +104,6 @@ fi
 %config %{_initrddir}/mrepo
 %{_bindir}/gensystemid
 %{_bindir}/mrepo
-%{_bindir}/rhnget
-%{_bindir}/youget
 %{_datadir}/mrepo/
 %{_localstatedir}/cache/mrepo/
 %{_localstatedir}/mrepo/

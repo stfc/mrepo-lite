@@ -60,8 +60,7 @@ variables = {}
 enable = ('yes', 'on', 'true', '1')
 disable = ('no', 'off', 'false', '0')
 
-### Register rhn and rhns as a known schemes
-for scheme in ('rhn', 'rhns', 'you', 'reposync', 'reposyncs', 'reposyncf'):
+for scheme in ('reposync', 'reposyncs', 'reposyncf'):
     urlparse.uses_netloc.insert(0, scheme)
     urlparse.uses_query.insert(0, scheme)
 
@@ -70,7 +69,6 @@ class Options:
     def __init__(self, args):
         self.configfile = '/etc/mrepo.conf'
         self.dists = []
-        self.rhnrelease = None
         self.force = False
         self.dryrun = False
         self.generate = False
@@ -130,8 +128,8 @@ class Options:
                 self.update = True
 
         if not self.types:
-            self.types = ['file', 'fish', 'ftp', 'http', 'https', 'mc', 'rhn',
-                          'rhns', 'rsync', 'sftp', 'mrepo', 'you', 'reposync', 'reposyncs',
+            self.types = ['file', 'fish', 'ftp', 'http', 'https', 'mc',
+                          'rsync', 'sftp', 'mrepo', 'reposync', 'reposyncs',
                           'reposyncf']
 
         for arg in args:
@@ -168,7 +166,7 @@ mrepo options:
   -q, --quiet             minimal output
   -r, --repo=repo1,repo2  restrict action to specific repositories
       --remount           remount distribution ISOs
-  -t, --type=type1,type2  mirror types to use. Default: file, fish, ftp, http, https, mc, rhn, rhns, rsync, sftp, mrepo, you
+  -t, --type=type1,type2  mirror types to use. Default: file, fish, ftp, http, https, mc, rsync, sftp, mrepo
   -u, --update            fetch OS updates
   -v, --verbose           increase verbosity
       --version           print mrepo version information
@@ -225,11 +223,9 @@ class Config:
         self.cmd['mount'] = self.getoption('main', 'mountcmd', '/bin/mount')
         self.cmd['repoview'] = self.getoption('main', 'repoviewcmd', '/usr/bin/repoview')
         self.cmd['reposync'] = self.getoption('main', 'reposynccmd', '/usr/bin/reposync')
-        self.cmd['rhnget'] = self.getoption('main', 'rhngetcmd', '/usr/bin/rhnget')
         self.cmd['rsync'] = self.getoption('main', 'rsynccmd', '/usr/bin/rsync')
         self.cmd['unionfs'] = self.getoption('main', 'unionfscmd', '/usr/bin/unionfs')
         self.cmd['umount'] = self.getoption('main', 'umountcmd', '/bin/umount')
-        self.cmd['youget'] = self.getoption('main', 'yougetcmd', '/usr/bin/youget')
         self.cmd['yumarch'] = self.getoption('main', 'yumarchcmd', '/usr/bin/yum-arch')
 
         self.createrepooptions = self.getoption('main', 'createrepo-options', '--pretty --database --update')
@@ -255,11 +251,6 @@ class Config:
         self.reposyncnorepopath = self.getoption('main','reposync-no-repopath', 'yes') not in disable
         self.reposynctimeout = self.getoption('main','reposync-timeout', '90')
         self.reposyncminrate = self.getoption('main','reposync-minrate', '250')
-
-        self.rhnlogin = self.getoption('main', 'rhnlogin', None)
-        self.rhngetoptions = self.getoption('main', 'rhnget-options', '')
-        self.rhngetcleanup = self.getoption('main', 'rhnget-cleanup', 'yes') not in disable
-        self.rhngetdownloadall = self.getoption('main', 'rhnget-download-all', 'no') not in disable
 
         self.rsyncbwlimit = self.getoption('main', 'rsync-bandwidth-limit', None)
         self.rsynccleanup = self.getoption('main', 'rsync-cleanup', 'yes') not in disable
@@ -329,7 +320,7 @@ class Config:
                     dist.unionfs = True
                     dist.systemid = None
                     for option in self.cfg.options(section):
-                        if option in ('iso', 'name', 'release', 'repo', 'rhnrelease'):
+                        if option in ('iso', 'name', 'release', 'repo'):
                             setattr(dist, option, self.cfg.get(section, option))
                         elif option in ('arch', 'dist'):
                             pass
@@ -392,7 +383,6 @@ class Dist:
         self.iso = None
         self.release = None
         self.repos = []
-        self.rhnrelease = None
         self.srcdir = cf.srcdir
         self.discs = ()
         self.isos = []
@@ -408,7 +398,7 @@ class Dist:
                         'nick': self.nick,
                         'dist': self.dist,
                         'release': self.release,
-                        'rhnrelease': self.rhnrelease})
+                      })
         for key, value in vars(self).iteritems():
             if isinstance(value, types.StringType):
                 setattr(self, key, substitute(value, varlist))
@@ -714,10 +704,6 @@ class Repo:
                     mirrormrepo(url, self.srcdir)
                 elif s in ('mc', ):
                     mirrormirrordir(url, self.srcdir)
-                elif s in ('rhn', 'rhns'):
-                    mirrorrhnget(url, self.srcdir, self.dist)
-                elif s in ('you', ):
-                    mirroryouget(url, self.srcdir, self.dist)
                 elif s in ('reposync', 'reposyncs', 'reposyncf'):
                     mirrorreposync(url, self.srcdir, '%s-%s' % (self.dist.nick, self.name), self.dist)
                 else:
@@ -1375,95 +1361,6 @@ def mirrormrepo(url, path):
     symlink(os.path.join(cf.srcdir, pathname), path)
 #   basename = os.path.basename(pathname)
 #   symlink(os.path.join(cf.srcdir, pathname), os.path.join(path, basename))
-
-
-def mirrorrhnget(url, path, dist):
-    "Mirror everything from a rhn:// or rhns:// URL"
-    if not cf.cmd['rhnget']:
-        error(1, 'rhnget was not found. rhn and rhns support is therefore disabled.')
-        return
-    mkdir(path)
-
-    opts = cf.rhngetoptions
-    if op.verbose >= 3:
-        opts = opts + ' -v' * (op.verbose - 3)
-    if op.dryrun:
-        opts = opts + ' --dry-run'
-    if cf.rhngetcleanup:
-        opts = opts + ' --delete'
-    if cf.rhngetdownloadall:
-        opts = opts + ' --download-all'
-
-    systemidpath = dist.systemid or os.path.join(cf.srcdir, dist.nick, 'systemid')
-
-    if os.path.isfile(systemidpath):
-        opts = opts + ' --systemid="%s"' % systemidpath
-
-    if dist.rhnrelease:
-        opts = opts + ' --release="%s"' % dist.rhnrelease
-
-    if cf.rhnlogin:
-        rhnlogin = cf.rhnlogin.split(':')
-        if len(rhnlogin) > 0:
-            opts = opts + ' --username="%s"' % rhnlogin[0]
-        if len(rhnlogin) > 1:
-            opts = opts + ' --password="%s"' % rhnlogin[1]
-
-##  opts = opts + ' -I \"*.rpm\"'
-#   opts = opts + ' -G \"headers\" -G \"repodata\"'
-#   if cf.mirrordirexclsrpm:
-#       opts = opts + ' -G \"*.src.rpm\" -G \"SRPMS\"'
-#   if cf.mirrordirexcldebug:
-#       opts = opts + ' -G \"*-debuginfo-*.rpm\" -G \"debug\"'
-
-    ret = run("%s %s '%s' '%s'" % (cf.cmd['rhnget'], opts, url, path), dryrun=True)
-    if ret:
-        raise(mrepoMirrorException('Failed with return code: %s' % ret))
-
-
-def mirroryouget(url, path, dist):
-    "Mirror everything from a you:// URL"
-    if not cf.cmd['youget']:
-        error(1, 'youget was not found. YOU support is therefore disabled.')
-        return
-    mkdir(path)
-
-    url = url.replace('you://', 'https://')
-
-    opts = cf.rhngetoptions
-    if op.verbose >= 3:
-        opts = opts + ' -v' * (op.verbose - 3)
-    if op.dryrun:
-        opts = opts + ' --dry-run'
-    if cf.rhngetcleanup:
-        opts = opts + ' --delete'
-    if cf.rhngetdownloadall:
-        opts = opts + ' --download-all'
-
-    credpath = os.path.join(cf.srcdir, dist.nick)
-    if os.path.isdir(credpath):
-        opts = opts + ' --credpath="%s"' % credpath
-
-#    if dist.rhnrelease:
-#        opts = opts + ' --release="%s"' % dist.rhnrelease
-
-#    if cf.rhnlogin:
-#        rhnlogin = cf.rhnlogin.split(':')
-#        if len(rhnlogin) > 0:
-#            opts = opts + ' --username="%s"' % rhnlogin[0]
-#        if len(rhnlogin) > 1:
-#            opts = opts + ' --password="%s"' % rhnlogin[1]
-
-##  opts = opts + ' -I \"*.rpm\"'
-#   opts = opts + ' -G \"headers\" -G \"repodata\"'
-#   if cf.mirrordirexclsrpm:
-#       opts = opts + ' -G \"*.src.rpm\" -G \"SRPMS\"'
-#   if cf.mirrordirexcldebug:
-#       opts = opts + ' -G \"*-debuginfo-*.rpm\" -G \"debug\"'
-
-    ret = run("%s %s '%s' '%s'" % (cf.cmd['youget'], opts, url, path), dryrun=True)
-    if ret:
-        raise(mrepoMirrorException('Failed with return code: %s' % ret))
 
 
 def mirrorreposync(url, path, reponame, dist):

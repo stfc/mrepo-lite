@@ -20,7 +20,6 @@ Requisites:
 	rsync		provides rsync:// access
 	mirrordir	provides ftp:// and mc:// access
 	lftp		provides ftp://, http://, sftp:// fish://
-	up2date		provides rhn:// and rhns:// access
 
   If you want to hardlink duplicate (downloaded) packages to save on
   diskspace, you need to install:
