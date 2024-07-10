@@ -197,7 +197,6 @@ class Config:
 
         self.cmd = {}
         self.cmd['createrepo'] = self.getoption('main', 'createrepocmd', '/usr/bin/createrepo')
-        self.cmd['genbasedir'] = self.getoption('main', 'genbasedircmd', '/usr/bin/genbasedir')
         self.cmd['lftp'] = self.getoption('main', 'lftpcmd', '/usr/bin/lftp')
         self.cmd['repoview'] = self.getoption('main', 'repoviewcmd', '/usr/bin/repoview')
         self.cmd['reposync'] = self.getoption('main', 'reposynccmd', '/usr/bin/reposync')
@@ -609,7 +608,7 @@ class Repo:
             error(0, '%s: Lockfile %s does not exist. Cannot unlock. Something fishy here ?' % (self.dist.nick, lockfile))
 
     def createmd(self):
-        metadata = ('apt', 'createrepo', 'repomd', 'repoview')
+        metadata = ('createrepo', 'repomd', 'repoview')
         index = ('repoview',)
 
         if not self.changed and not op.force:
@@ -620,8 +619,6 @@ class Repo:
             for md in self.dist.metadata:
                 if md in ('createrepo', 'repomd'):
                     self.repomd()
-                elif md in ('apt',):
-                    self.apt()
                 elif md not in index:
                     error(0, 'The %s metadata is unknown.' % md)
 
@@ -668,53 +665,6 @@ class Repo:
             if ret:
                 raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['createrepo'], ret)))
 
-
-    def apt(self):
-        "Create an (old-style) apt repository"
-        if not cf.cmd['genbasedir']:
-            return
-        opts = ''
-        if op.verbose >= 3:
-            opts = ' --progress' + opts
-
-        mkdir(os.path.join(self.dist.dir, 'base'))
-
-        ### Write out /srcdir/nick/base/release
-        # TODO: should not be done per repository
-        releasefile = os.path.join(self.dist.dir, 'base', 'release')
-        if not os.path.exists(releasefile):
-            open(releasefile, 'w').write(
-                'Origin: %s\n'\
-                'Label: %s\n'\
-                'Suite: Unknown\n'\
-                'Codename: %s\n'\
-                'Date: unknown\n'\
-                'Architectures: %s\n'\
-                'Components: \n'\
-                'Description: %s\n'\
-                'MD5Sum:\n'\
-                % (os.uname()[1], self.dist.name, self.dist.nick, self.dist.arch, self.dist.name))
-
-        ### Write out /srcdir/nick/base/release.repo
-        releasefile = os.path.join(self.dist.dir, 'base', 'release.' + self.name)
-        if not os.path.exists(releasefile):
-            open(releasefile, 'w').write(
-                'Archive: %s\n'\
-                'Component: %s\n'\
-                'Version: %s\n'\
-                'Origin: %s\n'\
-                'Label: Repository %s for %s\n'\
-                'Architecture: %s\n'\
-                'NotAutomatic: false\n'\
-                % (self.name, self.name, self.dist.release, os.uname()[1], self.name, self.dist.name, self.dist.arch))
-
-        info(2, '%s: Create (old-style) apt repository for %s' % (self.dist.nick, self.name))
-#       if self.newrepos == self.oldrepos:
-#           run('%s %s --flat --bloat --bz2only %s' % (cf.cmd['genbasedir'], opts, self.dist.dir))
-#       else:
-        ret = run('%s %s --flat --bloat --bz2only --partial %s %s' % (cf.cmd['genbasedir'], opts, self.dist.dir, self.name))
-        if ret:
-            raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['genbasedir'], ret)))
 
     def repoview(self):
         "Create a repoview index"
@@ -1298,8 +1248,8 @@ def main():
             cf.cmd[cmd] = ''
         else:
             cf.cmd[cmd] = ' '.join(cmdlist)
-    if not cf.cmd['createrepo'] and not cf.cmd['genbasedir']:
-        error(1, 'No tools found to generate repository metadata. Please install apt or createrepo.')
+    if not cf.cmd['createrepo']:
+        error(1, 'No tools found to generate repository metadata. Please install createrepo.')
 
     ### Set proxy-related environment variables
     if cf.no_proxy:

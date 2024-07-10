@@ -88,7 +88,7 @@ Example from default mrepo.conf:
 	[main]
 	srcdir=/var/mrepo
 	wwwdir=/var/www/mrepo
-	metadata=apt repomd
+	metadata=repomd
 	arch=i386
 
 The srcdir is where mrepo will download and store the files for your repo
@@ -161,8 +161,6 @@ a combination of these packages:
 
 	keyword		description		package
 	"""""""		"""""""""""		"""""""
-	apt		for apt 0.5.15cnc	binary 'genbasedir' inside 'apt' package
-
 	repomd		for apt >= 0.5.15lorg	binary 'createrepo' inside 'createrepo' package
 			and yum >= 2.4
 

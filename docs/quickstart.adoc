@@ -8,7 +8,6 @@ Requisites:
 
 	tool		package		provides
 	""""		"""""""		""""""""
-	genbasedir	apt		provides apt support
 	createrepo	createrepo	provides repomd support (new yum, new apt)
 
   Depending on what kind of sources you want to mirror, you can install
