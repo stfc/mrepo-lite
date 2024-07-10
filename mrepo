@@ -189,8 +189,6 @@ class Config:
         if op.verbose == 1 and self.quiet:
             op.verbose = 0
 
-        self.hardlink = self.getoption('main', 'hardlink', 'no') not in disable
-
         self.no_proxy = self.getoption('main', 'no_proxy', None)
         self.ftp_proxy = self.getoption('main', 'ftp_proxy', None)
         self.http_proxy = self.getoption('main', 'http_proxy', None)
@@ -200,9 +198,6 @@ class Config:
         self.cmd = {}
         self.cmd['createrepo'] = self.getoption('main', 'createrepocmd', '/usr/bin/createrepo')
         self.cmd['genbasedir'] = self.getoption('main', 'genbasedircmd', '/usr/bin/genbasedir')
-        self.cmd['hardlink'] = self.getoption('main', 'hardlinkcmd', '/usr/sbin/hardlink')
-        self.cmd['hardlink++'] = self.getoption('main', 'hardlinkcppcmd', '/usr/bin/hardlink++')
-        self.cmd['hardlinkpy'] = self.getoption('main', 'hardlinkpycmd', '/usr/bin/hardlinkpy')
         self.cmd['lftp'] = self.getoption('main', 'lftpcmd', '/usr/bin/lftp')
         self.cmd['repoview'] = self.getoption('main', 'repoviewcmd', '/usr/bin/repoview')
         self.cmd['reposync'] = self.getoption('main', 'reposynccmd', '/usr/bin/reposync')
@@ -1169,30 +1164,6 @@ def mirrorreposync(url, path, reponame, dist):
         raise(mrepoMirrorException('Failed with return code: %s' % ret))
 
 
-def hardlink(srcdir):
-    info(1, 'Hardlinking duplicate packages in %s.' % srcdir)
-    opts = ''
-    if cf.cmd['hardlinkpy']:
-        if op.verbose <= 2:
-            opts = ' -v 0'
-        else:
-            opts = ' -v %d' % (op.verbose - 2)
-        run('%s %s %s' % (cf.cmd['hardlinkpy'], os.path.join(srcdir, ''), opts))
-    elif cf.cmd['hardlink++']:
-        if op.verbose <= 2:
-            opts = '>/dev/null'
-        run('%s %s %s' % (cf.cmd['hardlink++'], os.path.join(srcdir, ''), opts))
-    elif cf.cmd['hardlink']:
-        if op.verbose:
-            opts = opts + ' -' + ('v' * (op.verbose - 2))
-        if op.dryrun:
-            opts = opts + ' -n'
-        run('%s -c %s %s' % (cf.cmd['hardlink'], opts, os.path.join(srcdir, '')), dryrun=True)
-    else:
-        info(1, 'hardlink was not found, hardlink support is therefore disabled.')
-        return
-
-
 def rpmlink((dist, repo), dirpath, filelist):
     archlist = ['noarch', ]
     if archs.has_key(dist.arch):
@@ -1462,8 +1433,6 @@ def main():
 
         dist.genmetadata()
 
-    if cf.hardlink and not op.dists:
-        hardlink(cf.srcdir)
 
 ### Unbuffered sys.stdout
 sys.stdout = os.fdopen(1, 'w', 0)

@@ -16,7 +16,6 @@ contact me as well. :) Send an email to: Dag Wieers <dag@wieers.com>
 + NFS support enable by default, using autofs (waiting for Serge Sterckx)
 + Add support for SRPM files (just put them into one directory /SRPMS)
 + Check files that do not match the regexp and compare filename to rpm headers
-+ Make rsync/lftp download requests from the same server into 1 request (hardlinks)
 + Use mirrorlist option from .repo files as a source (for http)
 + Autocreate yum .repo files and apt .list files to be used by local clients
 + Add support for other remote synchronising tools (sitecopy, wget)

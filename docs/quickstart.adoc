@@ -20,12 +20,6 @@ Requisites:
 	rsync		provides rsync:// access
 	lftp		provides ftp://, http://, sftp:// fish://
 
-  If you want to hardlink duplicate (downloaded) packages to save on
-  diskspace, you need to install:
-
-	hardlink++	(separate 'hardlink++' package)
-	hardlink	(part of the kernel-utils package)
-
 
 Do the following steps to get started (real) fast.
 
