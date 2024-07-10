@@ -3,7 +3,6 @@ This is a trimmed down version of Dag Wieers original TODO list.
 
 ### Back-end support
 + Add libcurl support and (optionally?) make it the default 
-+ NFS support enable by default, using autofs (waiting for Serge Sterckx)
 + Add support for SRPM files (just put them into one directory /SRPMS)
 + Check files that do not match the regexp and compare filename to rpm headers
 + Use mirrorlist option from .repo files as a source (for http)
