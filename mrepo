@@ -186,9 +186,7 @@ class Config:
         self.lockdir = self.getoption('main', 'lockdir', '/var/cache/mrepo')
         self.confdir = self.getoption('main', 'confdir', '/etc/mrepo.conf.d')
         self.htmldir = self.getoption('main', 'htmldir', '/usr/share/mrepo/html')
-        self.pxelinux = self.getoption('main', 'pxelinux', '/usr/lib/syslinux/pxelinux.0')
         self.srcdir = self.getoption('main', 'srcdir', '/var/mrepo')
-        self.tftpdir = self.getoption('main', 'tftpdir', '/tftpboot/mrepo')
         self.wwwdir = self.getoption('main', 'wwwdir', '/var/www/mrepo')
         self.logfile = self.getoption('main', 'logfile', '/var/log/mrepo.log')
 
@@ -665,24 +663,6 @@ class Dist:
                 else:
                     info(2, '%s: Unmount ISO %s from %s' % (self.nick, os.path.basename(iso), mount))
                     run('%s %s' % ('fusermount -u', mount))
-
-    def pxe(self):
-        "Create PXE boot setup"
-        tftpbootdir = os.path.dirname(cf.tftpdir)
-        if cf.tftpdir and tftpbootdir and os.path.isdir(cf.tftpdir):
-            tftpdir = os.path.join(cf.tftpdir, self.nick)
-            mkdir(tftpdir)
-            info(1, '%s: Symlink pxe boot files to %s ' % (self.nick, tftpdir))
-            mkdir(os.path.join(tftpdir, 'pxelinux.cfg'))
-
-            ### For Red Hat
-            for file in glob.glob(self.dir + '/disc1/images/pxeboot/initrd*.img'):
-                copy(file, tftpdir)
-            for file in glob.glob(self.dir + '/disc1/images/pxeboot/vmlinuz'):
-                copy(file, tftpdir)
-
-            if cf.pxelinux:
-                copy(cf.pxelinux, tftpdir)
 
     def html(self):
         "Put html information in repository"
@@ -1868,7 +1848,6 @@ def main():
         info(1, '%s: Generating %s meta-data' % (dist.nick, dist.name))
 
         dist.genmetadata()
-        dist.pxe()
 
     if cf.hardlink and not op.dists:
         hardlink(cf.srcdir)

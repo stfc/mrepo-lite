@@ -59,7 +59,6 @@ contact me as well. :) Send an email to: Dag Wieers <dag@wieers.com>
 + Add a mrepo and mrepo.conf manpage
 + Add a gensystemid and rhnget manpage
 + Add documentation on how to configure clients
-+ Add integration/documentation with ISC dhcpd
 + Add documentation about chaining mrepo servers
 + Comment the code more (pydoc strings)
 + ZeroConf support (or documentation)
@@ -74,7 +73,6 @@ contact me as well. :) Send an email to: Dag Wieers <dag@wieers.com>
 ### Bugs
 + yum-arch stumbles on broken symlinks (https://devel.linux.duke.edu/bugzilla/show_bug.cgi?id=280)
 + Correct file permissions/ownerships of packages in /var/mrepo (add umask option)
-+ Improve debugging output for pxelinux and /tftpboot/
 
 ### rhnget tool / RHN support
 + Fix the 'cached' logininfo which causes old channel information to be present - Fixed when using unique systemids ?
@@ -104,19 +102,6 @@ contact me as well. :) Send an email to: Dag Wieers <dag@wieers.com>
     if RPMS.repo is provided, use it as a base for all metadata
     if repo is provided, create symlinks in dirname() for RPMS.repo
 + Also see: http://people.redhat.com/laroche/pyrpm/
-
-### mrepomenu tool / remote installation
-+ Create small curses tool to manage systems / MAC-addresses / profiles (kickstart)
-+ Generate remote syslinux menu to boot any of the available dists
-+ Look into providing bootsplash like SuSE
-+ Generate a dnsmasq-mrepo.conf if dnsmasq is installed/running(?)
-+ Add default kickstart integration (files/location)
-+ Add default AutoYast integration (help needed)
-+ Adapt to make Mandrake/SuSE work too (help needed)
-+ Add CSM support
-
-### mrepopxe tool
-+ Generates necessary PXE config-files and allow for 3rd party boot-images
 
 ### mrepousb tool
 + Create a bootable USB stick and allow for 3rd party boot-images
