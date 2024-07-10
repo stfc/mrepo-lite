@@ -59,20 +59,5 @@ contact me as well. :) Send an email to: Dag Wieers <dag@wieers.com>
 + Should have a target (-t) option to specify the configuration output format (apt/yum/smart)
 + It scans the URL given and looks for know repository metadata
 
-### mrepogen tool / repository metadata
-+ Replaces genbasedir, createrepo and yum-arch
-+ Creates rsyncable bzip2 and gzip data
-+ Uses 1 cachedir for all generation
-+ Writes out all repository metadata in 1 cycle
-+ Complains when files are damaged or unsigned
-+ Creates a directory checksum to check for changes
-+ Allow to generate x revisions of older packages (default to 2)
-+ Self-contained (1 single file) but usable as module
-+ Works on python 2.2.3 (RHEL3)
-+ Understands directory layout, ie.
-    if RPMS.repo is provided, use it as a base for all metadata
-    if repo is provided, create symlinks in dirname() for RPMS.repo
-+ Also see: http://people.redhat.com/laroche/pyrpm/
-
 ### mrepousb tool
 + Create a bootable USB stick and allow for 3rd party boot-images
