@@ -13,9 +13,6 @@ This is a trimmed down version of Dag Wieers original TODO list.
 + Create anaconda-style metadata for booting an updated installation
 + Update Apt release info transparantly when mrepo config changes (Tom G. Christensen)
 
-### Reporting utility
-+ Logwatch configuration for mrepo
-
 ### Configuration
 + Allow to specify rsync/lftp options on a per distribution basis (see ~/.lftp/rc)
 + Add more working distributions to /etc/mrepo.conf.d/
