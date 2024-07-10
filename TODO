@@ -26,7 +26,6 @@ This is a trimmed down version of Dag Wieers original TODO list.
 
 ### Documentation
 + Add a mrepo and mrepo.conf manpage
-+ Add documentation about chaining mrepo servers
 + Comment the code more (pydoc strings)
 + ZeroConf support (or documentation)
 + Comply with PEP8: http://www.python.org/dev/peps/pep-0008/
