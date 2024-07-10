@@ -163,8 +163,6 @@ a combination of these packages:
 	"""""""		"""""""""""		"""""""
 	apt		for apt 0.5.15cnc	binary 'genbasedir' inside 'apt' package
 
-	yum		for yum < 2.4		binary 'yum-arch' inside 'yum' package
-
 	repomd		for apt >= 0.5.15lorg	binary 'createrepo' inside 'createrepo' package
 			and yum >= 2.4
 

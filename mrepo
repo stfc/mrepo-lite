@@ -202,7 +202,6 @@ class Config:
         self.cmd['repoview'] = self.getoption('main', 'repoviewcmd', '/usr/bin/repoview')
         self.cmd['reposync'] = self.getoption('main', 'reposynccmd', '/usr/bin/reposync')
         self.cmd['rsync'] = self.getoption('main', 'rsynccmd', '/usr/bin/rsync')
-        self.cmd['yumarch'] = self.getoption('main', 'yumarchcmd', '/usr/bin/yum-arch')
 
         self.createrepooptions = self.getoption('main', 'createrepo-options', '--pretty --database --update')
 
@@ -610,7 +609,7 @@ class Repo:
             error(0, '%s: Lockfile %s does not exist. Cannot unlock. Something fishy here ?' % (self.dist.nick, lockfile))
 
     def createmd(self):
-        metadata = ('apt', 'createrepo', 'repomd', 'repoview', 'yum')
+        metadata = ('apt', 'createrepo', 'repomd', 'repoview')
         index = ('repoview',)
 
         if not self.changed and not op.force:
@@ -621,8 +620,6 @@ class Repo:
             for md in self.dist.metadata:
                 if md in ('createrepo', 'repomd'):
                     self.repomd()
-                elif md in ('yum',):
-                    self.yum()
                 elif md in ('apt',):
                     self.apt()
                 elif md not in index:
@@ -671,26 +668,6 @@ class Repo:
             if ret:
                 raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['createrepo'], ret)))
 
-    def yum(self):
-        "Create a (old-style) yum repository"
-        if not cf.cmd['yumarch']:
-            return
-        opts = ''
-        if op.verbose <= 2:
-            opts = ' -q' + opts
-        elif op.verbose == 4:
-            opts = ' -v' + opts
-        elif op.verbose >= 5:
-            opts = ' -vv' + opts
-        if op.dryrun:
-            opts = opts + ' -n'
-        if os.path.exists(self.wwwdir):
-            if os.path.isdir(os.path.join(self.wwwdir, '.oldheaders')):
-                remove(os.path.join(self.wwwdir, '.oldheaders'))
-            info(2, '%s: Create (old-style) yum repository for %s' % (self.dist.nick, self.name))
-            ret = run('%s %s -l %s' % (cf.cmd['yumarch'], opts, self.wwwdir))
-            if ret:
-                raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['yumarch'], ret)))
 
     def apt(self):
         "Create an (old-style) apt repository"
@@ -1321,8 +1298,8 @@ def main():
             cf.cmd[cmd] = ''
         else:
             cf.cmd[cmd] = ' '.join(cmdlist)
-    if not cf.cmd['createrepo'] and not cf.cmd['yumarch'] and not cf.cmd['genbasedir']:
-        error(1, 'No tools found to generate repository metadata. Please install apt, yum or createrepo.')
+    if not cf.cmd['createrepo'] and not cf.cmd['genbasedir']:
+        error(1, 'No tools found to generate repository metadata. Please install apt or createrepo.')
 
     ### Set proxy-related environment variables
     if cf.no_proxy:

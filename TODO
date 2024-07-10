@@ -51,7 +51,6 @@ contact me as well. :) Send an email to: Dag Wieers <dag@wieers.com>
 + Improve the remove and symlink stage (combine the check of existing links with creating and removing)
 
 ### Bugs
-+ yum-arch stumbles on broken symlinks (https://devel.linux.duke.edu/bugzilla/show_bug.cgi?id=280)
 + Correct file permissions/ownerships of packages in /var/mrepo (add umask option)
 
 ### mrepocfg tool / generate a configuration for clients (Chandan Dutta Chowdhury)
