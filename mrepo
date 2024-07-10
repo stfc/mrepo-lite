@@ -405,11 +405,6 @@ class Dist:
         self.sslkey = None
         self.sslca = None
 
-#   def __repr__(self):
-#       for key, value in vars(self).iteritems():
-#           if isinstance(value, types.StringType):
-#               print key, '->', value
-
     def rewrite(self):
         "Rewrite (string) attributes to replace variables by other (string) attributes"
         varlist = variables
@@ -713,7 +708,6 @@ class Repo:
         self.newlist = set()
 
     def __repr__(self):
-#       return "%s/%s" % (self.dist.nick, self.name)
         return self.name
 
     def mirror(self):
@@ -772,14 +766,6 @@ class Repo:
         "Capture a list of packages in the repository"
         filelist = set()
 
-        ### os.walk() is a python 2.4 feature
-#       for root, dirs, files in os.walk(self.srcdir):
-#           for file in files:
-#               if os.path.exists(file) and file.endswith('.rpm'):
-#                   size = os.stat(os.path.join(root, file)).st_size
-#                   filelist.add( (file, size) )
-
-        ### os.path.walk() goes back further
         def addfile((filelist, ), path, files):
             for file in files:
                 if os.path.exists(os.path.join(path, file)) and file.endswith('.rpm'):
@@ -1010,10 +996,6 @@ class Repo:
             ret = run('%s %s --title="%s" %s' % (cf.cmd['repoview'], opts, title, self.wwwdir))
             if ret:
                 raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['repoview'], ret)))
-#           url = 'http://mrepo/%s/RPMS.%s/' % (self.dist.nick, self.name)
-#           ret = run('%s %s --url="%s" %s' % (cf.cmd['repoview'], opts, url, self.wwwdir))
-#           if ret:
-#               raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['repoview'], ret)))
 
 
 class mySet:
@@ -1104,7 +1086,6 @@ def run(str, dryrun=False):
         str = str + ' >/dev/null'
     if not op.dryrun or dryrun:
         info(5, 'Execute: %s' % str)
-#       os.popen(str, 'w')
         return os.system(str)
     else:
         info(1, 'Not execute: %s' % str)
@@ -1222,9 +1203,6 @@ def symlink(src, dst):
         if os.path.samefile(src, dst):
             return
         os.rename(dst, dst + '.mrepobak')
-
-### Not using filecmp increases speed with 15%
-#   if os.path.isfile(dst) and filecmp.cmp(src, dst) == 0:
 
     src = relpath(src, dst)
 
@@ -1375,7 +1353,6 @@ def mirrorlftp(url, path, dist):
     if dist.sslca:
         cmds = cmds + ' set ssl:ca-file ' + dist.sslca + ' ;'
 
-#   cmds = 'set dns:fatal-timeout 5'
     if cf.lftptimeout:
         cmds = cmds + ' set net:timeout %s;' % cf.lftptimeout
     if cf.lftpbwlimit:
@@ -1406,8 +1383,6 @@ def mirrorlftp(url, path, dist):
 def mirrorfile(url, path):
     "Mirror everything from a file:// URL by symlinking"
     dir = url.replace('file://', '')
-#   while dir.endswith('/'):
-#       dir = dir[0:-1]
     if os.path.isdir(dir):
         symlink(dir, path)
 #   else: ### FIXME: Only if ISO file
@@ -1928,9 +1903,6 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt, e:
         die(6, 'Exiting on user request')
-#   except OSError, e:
-#       print e.errno
-#       die(7, 'OSError: %s' % e)
     sys.exit(exitcode)
 
 # vim:ts=4:sw=4:et
