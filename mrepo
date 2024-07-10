@@ -81,7 +81,6 @@ class Options:
         self.umount = False
         self.update = False
         self.verbose = 1
-        self.htmlindex = False
         self.create_aggregate_repos = False
 
         try:
@@ -185,7 +184,6 @@ class Config:
         self.cachedir = self.getoption('main', 'cachedir', '/var/cache/mrepo')
         self.lockdir = self.getoption('main', 'lockdir', '/var/cache/mrepo')
         self.confdir = self.getoption('main', 'confdir', '/etc/mrepo.conf.d')
-        self.htmldir = self.getoption('main', 'htmldir', '/usr/share/mrepo/html')
         self.srcdir = self.getoption('main', 'srcdir', '/var/mrepo')
         self.wwwdir = self.getoption('main', 'wwwdir', '/var/www/mrepo')
         self.logfile = self.getoption('main', 'logfile', '/var/log/mrepo.log')
@@ -663,14 +661,6 @@ class Dist:
                 else:
                     info(2, '%s: Unmount ISO %s from %s' % (self.nick, os.path.basename(iso), mount))
                     run('%s %s' % ('fusermount -u', mount))
-
-    def html(self):
-        "Put html information in repository"
-        mkdir(self.dir)
-        if not op.dryrun:
-            open(os.path.join(self.dir, '.title'), 'w').write(self.name)
-        symlink(os.path.join(cf.htmldir, 'HEADER.repo.shtml'), os.path.join(self.dir, 'HEADER.shtml'))
-        symlink(os.path.join(cf.htmldir, 'README.repo.shtml'), os.path.join(self.dir, 'README.shtml'))
 
 
 class Repo:
@@ -1587,11 +1577,6 @@ def which(cmd):
     return ''
 
 
-def htmlindex():
-    symlink(cf.htmldir + '/HEADER.index.shtml', cf.wwwdir + '/HEADER.shtml')
-    symlink(cf.htmldir + '/README.index.shtml', cf.wwwdir + '/README.shtml')
-
-
 def mail(subject, msg):
     info(2, 'Sending mail to: %s' % cf.mailto)
     try:
@@ -1838,13 +1823,9 @@ def main():
     if not op.generate:
         sys.exit(0)
 
-    if op.htmlindex:
-        htmlindex()
 
     ### Generating metadata for available distributions/repositories
     for dist in dists:
-        dist.html()
-
         info(1, '%s: Generating %s meta-data' % (dist.nick, dist.name))
 
         dist.genmetadata()

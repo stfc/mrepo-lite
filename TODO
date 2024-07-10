@@ -46,14 +46,7 @@ contact me as well. :) Send an email to: Dag Wieers <dag@wieers.com>
 + Add more working distributions to /etc/mrepo.conf.d/
 
 ### Usability
-+ Create information about repository-updates in HEADER.shtml/README.shtml
 + Add selinux support
-
-### Web front-end (see repoview)
-+ Improve SHTML output (more condensed and useful information)
-+ New website should contain nice logo, menu and help
-+ New website should contain also remote boot info, repo information and new RPMs
-+ Allow to add external html generators (repoview, repojanitor)
 
 ### Documentation
 + Add a mrepo and mrepo.conf manpage

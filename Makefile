@@ -16,10 +16,7 @@ datadir = $(prefix)/share
 mandir = $(datadir)/man
 localstatedir = /var
 
-httpddir = $(sysconfdir)/httpd/conf.d
-
 cachedir = $(localstatedir)/cache/mrepo
-htmldir = $(datadir)/mrepo/html
 srcdir = $(localstatedir)/mrepo
 wwwdir = $(localstatedir)/www/mrepo
 
@@ -41,10 +38,6 @@ install:
 	install -Dp -m0755 youget $(DESTDIR)$(bindir)/youget
 	[ ! -f $(DESTDIR)$(sysconfdir)/mrepo.conf ] && install -D -m0600 config/mrepo.conf $(DESTDIR)$(sysconfdir)/mrepo.conf || :
 	install -d -m0755 $(DESTDIR)$(sysconfdir)/mrepo.conf.d/
-	install -Dp -m0644 config/httpd/mrepo.conf $(DESTDIR)$(httpddir)/mrepo.conf
-
-	install -d -m0755 $(DESTDIR)$(htmldir)
-	install -p -m0644 html/* $(DESTDIR)$(htmldir)
 
 	install -d -m0755 $(DESTDIR)$(srcdir)/all/
 	install -d -m0755 $(DESTDIR)$(wwwdir)

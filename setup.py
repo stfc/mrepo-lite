@@ -44,7 +44,6 @@ setup(
         ('/var/cache/mrepo', []),
         ('/var/www/mrepo', []),
         ('/var/mrepo/all/local', []),
-        ('/usr/share/mrepo/html', ['html/HEADER.index.shtml', 'html/HEADER.repo.shtml', 'html/README.index.shtml', 'html/README.repo.shtml']),
     ],
     download_url = 'http://dag.wieers.com/home-made/mrepo/mrepo-0.8.4svn.tar.gz',
     license = 'GPL',

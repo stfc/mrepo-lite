@@ -1,4 +1,0 @@
-<h1>mrepo RPM Mirror on <!--#echo var="SERVER_NAME" --> (<!--#echo var="SERVER_ADDR" -->)</h1>
-
-The subdirectories below are created and managed by <b>mrepo</b>. They contain
-RPM repositories for use with apt, yum and dnf.
