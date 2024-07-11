@@ -2,7 +2,7 @@
 # Authority: dag
 # Upstream: Dag Wieers <dag$wieers,com>
 
-Summary: Set up repositories from various sources (ISO, RHN, YOU, rsync, http, ftp, ...)
+Summary: Set up repositories from various sources (ISO, rsync, http, ftp, ...)
 Name: mrepo
 Version: 0.8.8
 Release: 1
@@ -27,8 +27,7 @@ Obsoletes: yam <= %{version}
 
 %description
 mrepo builds a local Apt/Yum RPM repository from local ISO files,
-downloaded updates and extra packages from RHN and 3rd party
-repositories.
+downloaded updates and extra packages from 3rd party repositories.
 
 It can download all updates and extras automatically, creates
 the repository structure and meta-data, enables HTTP access to 
@@ -66,8 +65,6 @@ arch = i386
 
 mailto = root@localhost
 smtp-server = localhost
-
-#rhnlogin = username:password
 
 ### Any other section is considered a definition for a distribution
 ### You can put distribution sections in /etc/mrepo.conf.d/
@@ -107,8 +104,6 @@ fi
 %config %{_initrddir}/mrepo
 %{_bindir}/gensystemid
 %{_bindir}/mrepo
-%{_bindir}/rhnget
-%{_bindir}/youget
 %{_datadir}/mrepo/
 %{_localstatedir}/cache/mrepo/
 %{_localstatedir}/mrepo/

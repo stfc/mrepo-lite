@@ -17,7 +17,7 @@ srcdir = /var/mrepo
 		local/		- Directory for custom packages
 		$repo/		- Directory for repo global packages
 
-	$dist/		-	- Per distribution directory (put ISOs here)
+	$dist/		-	- Per distribution directory
 		local/		- Directory for custom packages
 		$repo/		- Per repository directory
 
@@ -27,8 +27,6 @@ Web directory
 wwwdir = /var/www/mrepo
 
 	$dist/
-		disc?/		- Loop-mounted ISO images
-		iso/		- Contains a symlink to the ISO files (if shareiso = yes)
 		RPMS.all/	- Contains all existing RPM packages
 		RPMS.local/	- Contains all local RPM packages
 		RPMS.$repo/	- Contains repo RPM packages

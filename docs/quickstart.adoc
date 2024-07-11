@@ -8,8 +8,6 @@ Requisites:
 
 	tool		package		provides
 	""""		"""""""		""""""""
-	genbasedir	apt		provides apt support
-	yum-arch	yum		provides yum support
 	createrepo	createrepo	provides repomd support (new yum, new apt)
 
   Depending on what kind of sources you want to mirror, you can install
@@ -18,27 +16,12 @@ Requisites:
 	tool		provides
 	""""		""""""""
 	rsync		provides rsync:// access
-	mirrordir	provides ftp:// and mc:// access
 	lftp		provides ftp://, http://, sftp:// fish://
-	up2date		provides rhn:// and rhns:// access
-
-  If you want to hardlink duplicate (downloaded) packages to save on
-  diskspace, you need to install:
-
-	hardlink++	(separate 'hardlink++' package)
-	hardlink	(part of the kernel-utils package)
 
 
 Do the following steps to get started (real) fast.
 
-  1. Start with collecting the existing ISO files you have of the
-     different distributions you want to put into a repository.
-     Put these into your $srcdir (normally /var/mrepo), eg:
-
-		/var/mrepo/fc3-i386/
-
-
-  2. Edit /etc/mrepo.conf and add for each distribution a new section
+  1. Edit /etc/mrepo.conf and add for each distribution a new section
      like the examples given in the default mrepo.conf, mrepo-complex.conf
      or mrepo-example.conf
 
@@ -49,7 +32,7 @@ Do the following steps to get started (real) fast.
      See the examples in the documentation as a reference.
 
 
-  3. If you want to add your own custom packages to one or all of
+  2. If you want to add your own custom packages to one or all of
      the repositories, you have 2 options.
 
      a. Add them to /var/mrepo/<distro>-<arch>/local/
@@ -76,12 +59,7 @@ Do the following steps to get started (real) fast.
         repositories.
 
 
-  4. Now run mrepo with no actions to see if the ISO files are mounted
-     and all your configuration options have been used:
-
-	mrepo -vv
-
-     Then run mrepo to update the repositories:
+  3. Now run mrepo to update the repositories:
 
 	mrepo -uvv
 
@@ -93,7 +71,7 @@ Do the following steps to get started (real) fast.
      http://localhost/mrepo/ to see if everything is the way you wanted.
 
 
-  5. Next time you can do directly
+  4. Next time you can do directly
 
 	mrepo -ug
      or
@@ -102,23 +80,8 @@ Do the following steps to get started (real) fast.
      and all steps will be performed in one phase.
 
 
-  6. If you're removing distributions from the mrepo.conf file and
-     you want to remove the ISOs to gain diskspace. Remember that
-     Linux will not release diskspace for files that are still
-     accessed (like a loop-mounted ISO file). You're best bet is
-     to first unmount the ISOs:
-
-	mrepo -vv --umount
-
-     then remove or comment the distributions and mount again:
-
-	mrepo -vv
-
-  7. When you're adding new distributions, it's sufficient to just
-     run mrepo again. It will automatically mount everything that is
-     not already mounted. You can always remount/reset by doing:
-
-	mrepo -vv --remount
+  5. When you're adding new distributions, it's sufficient to just
+     run mrepo again.
 
 ---
 Please send me improvements to this document.

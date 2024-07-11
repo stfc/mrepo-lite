@@ -11,7 +11,6 @@ httpddir = $(sysconfdir)/httpd/conf.d
 initrddir = $(sysconfdir)/rc.d/init.d
 
 cachedir = $(localstatedir)/cache/mrepo
-htmldir = $(datadir)/mrepo/html
 srcdir = $(localstatedir)/mrepo
 wwwdir = $(localstatedir)/www/mrepo
 

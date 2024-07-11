@@ -44,7 +44,6 @@ setup(
         ('/var/cache/mrepo', []),
         ('/var/www/mrepo', []),
         ('/var/mrepo/all/local', []),
-        ('/usr/share/mrepo/html', ['html/HEADER.index.shtml', 'html/HEADER.repo.shtml', 'html/README.index.shtml', 'html/README.repo.shtml']),
     ],
     download_url = 'http://dag.wieers.com/home-made/mrepo/mrepo-0.8.4svn.tar.gz',
     license = 'GPL',
@@ -60,17 +59,16 @@ setup(
     ],
     long_description = '''
 mrepo builds a local APT/Yum RPM repository from local ISO files, downloaded
-updates, and extra packages from RHN (Red Hat Network) and 3rd party
-repositories. It takes care of setting up the ISO files, downloading the
-RPMs, configuring HTTP access, and providing PXE/TFTP resources for remote
-installations.
+updates, and extra packages from 3rd party repositories. It takes care of
+setting up the ISO files, downloading the RPMs, configuring HTTP access, and
+providing PXE/TFTP resources for remote installations.
 
 It was primarily intended for doing remote network installations of various
 distributions from a laptop without the need for CD media or floppies, but
 is equally suitable for an organization's centralized update server.
 
 Depending on the use it may require:
-    apt, up2date, yum, createrepo, repoview, hardlink and/or hardlink++
+    apt, yum, dnf, createrepo, repoview
 ''',
 )
 

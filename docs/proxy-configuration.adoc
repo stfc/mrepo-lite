@@ -5,8 +5,8 @@ If you're using mrepo behind a proxy-server, you're out of luck for rsync
 support. Rsync has its own protocol that is not allowed through a normal
 proxy.
 
-FTP(S), HTTP(S) and RHN(S) network support however will work fine, if you
-configure one or some of the following environment variables:
+FTP(S) and HTTP(S) however will work fine, if you configure one or some of
+the following environment variables:
 
 ----
 export https_proxy="http://proxy:8080"

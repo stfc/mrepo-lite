@@ -60,8 +60,7 @@ variables = {}
 enable = ('yes', 'on', 'true', '1')
 disable = ('no', 'off', 'false', '0')
 
-### Register rhn and rhns as a known schemes
-for scheme in ('rhn', 'rhns', 'you', 'reposync', 'reposyncs', 'reposyncf'):
+for scheme in ('reposync', 'reposyncs', 'reposyncf'):
     urlparse.uses_netloc.insert(0, scheme)
     urlparse.uses_query.insert(0, scheme)
 
@@ -70,24 +69,20 @@ class Options:
     def __init__(self, args):
         self.configfile = '/etc/mrepo.conf'
         self.dists = []
-        self.rhnrelease = None
         self.force = False
         self.dryrun = False
         self.generate = False
         self.quiet = False
-        self.remount = False
         self.repos = []
         self.types = []
-        self.umount = False
         self.update = False
         self.verbose = 1
-        self.htmlindex = False
         self.create_aggregate_repos = False
 
         try:
             opts, args = getopt.getopt(args, 'c:d:fghnqr:t:uvx',
                 ('config=', 'dist=', 'dry-run', 'force', 'generate', 'help', 'quiet', 'repo=',
-                'remount', 'type=', 'umount', 'unmount', 'update', 'verbose', 'version', 'extras'))
+                 'type=', 'update', 'verbose', 'version', 'extras'))
         except getopt.error, exc:
             print 'mrepo: %s, try mrepo -h for a list of all the options' % str(exc)
             sys.exit(1)
@@ -113,14 +108,10 @@ class Options:
                 self.quiet = True
             elif opt in ('-r', '--repo'):
                 self.repos = self.repos + arg.split(',')
-            elif opt in ('--remount', ):
-                self.remount = True
             elif opt in ('-t', '--type'):
                 self.types = self.types + arg.split(',')
             elif opt in ('-u', '--update'):
                 self.update = True
-            elif opt in ('--umount', '--unmount'):
-                self.umount = True
             elif opt in ('-v', '--verbose'):
                 self.verbose = self.verbose + 1
             elif opt in ('--version', ):
@@ -131,8 +122,8 @@ class Options:
                 self.update = True
 
         if not self.types:
-            self.types = ['file', 'fish', 'ftp', 'http', 'https', 'mc', 'rhn',
-                          'rhns', 'rsync', 'sftp', 'mrepo', 'you', 'reposync', 'reposyncs',
+            self.types = ['fish', 'ftp', 'http', 'https',
+                          'rsync', 'sftp', 'reposync', 'reposyncs',
                           'reposyncf']
 
         for arg in args:
@@ -159,7 +150,7 @@ class Options:
         print 'usage: mrepo [options] dist1 [dist2-arch ..]'
 
     def help(self):
-        print '''Set up a distribution server from ISO files
+        print '''Set up a mirror server
 
 mrepo options:
   -c, --config=file       specify alternative configfile
@@ -168,13 +159,11 @@ mrepo options:
   -n, --dry-run           show what would have been done
   -q, --quiet             minimal output
   -r, --repo=repo1,repo2  restrict action to specific repositories
-      --remount           remount distribution ISOs
-  -t, --type=type1,type2  mirror types to use. Default: file, fish, ftp, http, https, mc, rhn, rhns, rsync, sftp, mrepo, you
+  -t, --type=type1,type2  mirror types to use. Default: fish, ftp, http, https, rsync, sftp
   -u, --update            fetch OS updates
   -v, --verbose           increase verbosity
       --version           print mrepo version information
   -vv, -vvv, -vvvv..      increase verbosity more
-      --unmount           unmount distribution ISOs
 '''
 
 
@@ -185,10 +174,7 @@ class Config:
         self.cachedir = self.getoption('main', 'cachedir', '/var/cache/mrepo')
         self.lockdir = self.getoption('main', 'lockdir', '/var/cache/mrepo')
         self.confdir = self.getoption('main', 'confdir', '/etc/mrepo.conf.d')
-        self.htmldir = self.getoption('main', 'htmldir', '/usr/share/mrepo/html')
-        self.pxelinux = self.getoption('main', 'pxelinux', '/usr/lib/syslinux/pxelinux.0')
         self.srcdir = self.getoption('main', 'srcdir', '/var/mrepo')
-        self.tftpdir = self.getoption('main', 'tftpdir', '/tftpboot/mrepo')
         self.wwwdir = self.getoption('main', 'wwwdir', '/var/www/mrepo')
         self.logfile = self.getoption('main', 'logfile', '/var/log/mrepo.log')
 
@@ -199,17 +185,9 @@ class Config:
         self.arch = self.getoption('main', 'arch', 'i386')
         self.metadata = self.getoption('main', 'metadata', 'repomd repoview')
 
-        self.shareiso = self.getoption('main', 'shareiso', 'yes') not in disable
-
         self.quiet = self.getoption('main', 'quiet', 'no') not in disable
         if op.verbose == 1 and self.quiet:
             op.verbose = 0
-
-        self.hardlink = self.getoption('main', 'hardlink', 'no') not in disable
-
-        ### FIXME: See if fuse module is loaded
-        self.fuseiso = self.getoption('main', 'fuseiso', 'yes') not in disable
-        self.unionfs = self.getoption('main', 'unionfs', 'yes') not in disable
 
         self.no_proxy = self.getoption('main', 'no_proxy', None)
         self.ftp_proxy = self.getoption('main', 'ftp_proxy', None)
@@ -219,22 +197,10 @@ class Config:
 
         self.cmd = {}
         self.cmd['createrepo'] = self.getoption('main', 'createrepocmd', '/usr/bin/createrepo')
-        self.cmd['fuseiso'] = self.getoption('main', 'fuseisocmd', '/usr/bin/fuseiso')
-        self.cmd['genbasedir'] = self.getoption('main', 'genbasedircmd', '/usr/bin/genbasedir')
-        self.cmd['hardlink'] = self.getoption('main', 'hardlinkcmd', '/usr/sbin/hardlink')
-        self.cmd['hardlink++'] = self.getoption('main', 'hardlinkcppcmd', '/usr/bin/hardlink++')
-        self.cmd['hardlinkpy'] = self.getoption('main', 'hardlinkpycmd', '/usr/bin/hardlinkpy')
         self.cmd['lftp'] = self.getoption('main', 'lftpcmd', '/usr/bin/lftp')
-        self.cmd['mirrordir'] = self.getoption('main', 'mirrordircmd', '/usr/bin/mirrordir')
-        self.cmd['mount'] = self.getoption('main', 'mountcmd', '/bin/mount')
         self.cmd['repoview'] = self.getoption('main', 'repoviewcmd', '/usr/bin/repoview')
         self.cmd['reposync'] = self.getoption('main', 'reposynccmd', '/usr/bin/reposync')
-        self.cmd['rhnget'] = self.getoption('main', 'rhngetcmd', '/usr/bin/rhnget')
         self.cmd['rsync'] = self.getoption('main', 'rsynccmd', '/usr/bin/rsync')
-        self.cmd['unionfs'] = self.getoption('main', 'unionfscmd', '/usr/bin/unionfs')
-        self.cmd['umount'] = self.getoption('main', 'umountcmd', '/bin/umount')
-        self.cmd['youget'] = self.getoption('main', 'yougetcmd', '/usr/bin/youget')
-        self.cmd['yumarch'] = self.getoption('main', 'yumarchcmd', '/usr/bin/yum-arch')
 
         self.createrepooptions = self.getoption('main', 'createrepo-options', '--pretty --database --update')
 
@@ -247,11 +213,6 @@ class Config:
         self.lftpmirroroptions = self.getoption('main', 'lftp-mirror-options', '-c')
         self.lftptimeout = self.getoption('main', 'lftp-timeout', None)
 
-        self.mirrordircleanup = self.getoption('main', 'mirrordir-cleanup', 'yes') not in disable
-        self.mirrordirexcldebug = self.getoption('main', 'mirrordir-exclude-debug', 'yes') not in disable
-        self.mirrordirexclsrpm = self.getoption('main', 'mirrordir-exclude-srpm', 'yes') not in disable
-        self.mirrordiroptions = self.getoption('main', 'mirrordir-options', '')
-
         self.reposyncoptions = self.getoption('main', 'reposync-options', '')
         self.reposynccleanup = self.getoption('main', 'reposync-cleanup', 'yes') not in disable
         self.reposyncnewestonly = self.getoption('main', 'reposync-newest-only', 'no') not in disable
@@ -259,11 +220,6 @@ class Config:
         self.reposyncnorepopath = self.getoption('main','reposync-no-repopath', 'yes') not in disable
         self.reposynctimeout = self.getoption('main','reposync-timeout', '90')
         self.reposyncminrate = self.getoption('main','reposync-minrate', '250')
-
-        self.rhnlogin = self.getoption('main', 'rhnlogin', None)
-        self.rhngetoptions = self.getoption('main', 'rhnget-options', '')
-        self.rhngetcleanup = self.getoption('main', 'rhnget-cleanup', 'yes') not in disable
-        self.rhngetdownloadall = self.getoption('main', 'rhnget-download-all', 'no') not in disable
 
         self.rsyncbwlimit = self.getoption('main', 'rsync-bandwidth-limit', None)
         self.rsynccleanup = self.getoption('main', 'rsync-cleanup', 'yes') not in disable
@@ -329,20 +285,14 @@ class Config:
                     dist.metadata = self.metadata.split()
                     dist.enabled = True
                     dist.promoteepoch = True
-                    dist.fuseiso = True
-                    dist.unionfs = True
                     dist.systemid = None
                     for option in self.cfg.options(section):
-                        if option in ('iso', 'name', 'release', 'repo', 'rhnrelease'):
+                        if option in ('name', 'release', 'repo'):
                             setattr(dist, option, self.cfg.get(section, option))
                         elif option in ('arch', 'dist'):
                             pass
                         elif option in ('disabled',):
                             dist.enabled = self.cfg.get(section, option) in disable
-                        elif option in ('fuseiso',):
-                            dist.fuseiso = self.cfg.get(section, option) not in disable
-                        elif option in ('unionfs',):
-                            dist.unionfs = self.cfg.get(section, option) not in disable
                         elif option in ('metadata',):
                             setattr(dist, option, self.cfg.get(section, option).split())
                         elif option in ('promoteepoch',):
@@ -393,13 +343,9 @@ class Dist:
             self.nick = dist
         self.name = dist
         self.dir = os.path.join(cf.wwwdir, self.nick)
-        self.iso = None
         self.release = None
         self.repos = []
-        self.rhnrelease = None
         self.srcdir = cf.srcdir
-        self.discs = ()
-        self.isos = []
         self.disabled = False
         self.sslcert = None
         self.sslkey = None
@@ -412,48 +358,13 @@ class Dist:
                         'nick': self.nick,
                         'dist': self.dist,
                         'release': self.release,
-                        'rhnrelease': self.rhnrelease})
+                      })
         for key, value in vars(self).iteritems():
             if isinstance(value, types.StringType):
                 setattr(self, key, substitute(value, varlist))
         for repo in self.repos:
             varlist['repo'] = repo.name
             repo.url = substitute(repo.url, varlist)
-
-    def findisos(self):
-        "Return a list of existing ISO files"
-        if not self.iso:
-            return
-        if not self.isos:
-            for file in self.iso.split(' '):
-                file = os.path.basename(file)
-                absfile = file
-                if not os.path.isabs(file):
-                    absfile = os.path.join(cf.srcdir, self.nick, file)
-                    info(6, '%s: Looking for ISO files matching %s' % (self.nick, absfile))
-                    filelist = glob.glob(absfile)
-                if not filelist:
-                    absfile = os.path.join(cf.srcdir, self.dist, file)
-                    info(6, '%s: Looking for ISO files matching %s' % (self.nick, absfile))
-                    filelist = glob.glob(absfile)
-                if not filelist:
-                    absfile = os.path.join(cf.srcdir, 'iso', file)
-                    info(6, '%s: Looking for ISO files matching %s' % (self.nick, absfile))
-                    filelist = glob.glob(absfile)
-                if not filelist:
-                    absfile = os.path.join(cf.srcdir, file)
-                    info(6, '%s: Looking for ISO files matching %s' % (self.nick, absfile))
-                    filelist = glob.glob(absfile)
-                filelist.sort()
-                for iso in filelist:
-                    if os.path.isfile(iso) and iso not in self.isos:
-                        self.isos.append(iso)
-        if self.isos:
-            info(5, '%s: Found %d ISO files at %s' % (self.nick, len(self.isos), absfile))
-            self.repos.append(Repo('os', '', self, cf))
-            self.repos.sort(reposort)
-        else:
-            info(4, '%s: No ISO files found !' % self.nick)
 
     def listrepos(self, names=None):
         ret = []
@@ -468,28 +379,10 @@ class Dist:
         for repo in self.listrepos(op.repos):
             if not repo.lock('generate'):
                 continue
-            if repo.name in ('os', 'core') and self.isos:
-                repo.url = None
-                srcdirs = [pathjoin(self.dir, disc) for disc in self.discs]
-                self.linksync(repo, srcdirs)
-                allsrcdirs.extend(srcdirs)
 
-                os_components = (
-                    glob.glob(pathjoin(self.dir + '/disc1/*/base/comps.xml')) +  # RHEL 4
-                    glob.glob(pathjoin(self.dir + '/disc1/*/repodata/comps-*-core.xml')) +  # RHEL 5
-                    glob.glob(pathjoin(self.dir + '/disc1/repodata/*-comps*.xml')) +  # RHEL 6
-                    glob.glob(pathjoin(self.dir + '/disc1/repodata/*-comps.xml')) +  # CentOS 6
-                    glob.glob(pathjoin(self.dir + '/disc1/repodata/comps.xml'))  # Scientific Linux 6
-                )
-
-                for file in os_components:
-                    if not os.path.exists(pathjoin(self.srcdir, self.nick, 'os-comps.xml')):
-                        copy(file, pathjoin(self.srcdir, self.nick, 'os-comps.xml'))
-
-            else:
-                self.linksync(repo, [repo.srcdir, repo.allsrcdir])
-                allsrcdirs.append(repo.srcdir)
-                allsrcdirs.append(repo.allsrcdir)
+            self.linksync(repo, [repo.srcdir, repo.allsrcdir])
+            allsrcdirs.append(repo.srcdir)
+            allsrcdirs.append(repo.allsrcdir)
 
             repo.check()
             repo.createmd()
@@ -572,126 +465,6 @@ class Dist:
         if changed:
             repo.changed = True
 
-    def mount(self):
-        "Loopback mount all ISOs"
-        discs = []
-        mountpoints = []
-        discnr = 0
-        if cf.shareiso:
-            mkdir(os.path.join(self.dir, 'iso'))
-        else:
-            remove(os.path.join(self.dir, 'iso'))
-        regexp = re.compile('.+[_-]CD[0-9]?\..+')
-        ### FIXME: See if fuse module is loaded
-        if cf.cmd['fuseiso'] and cf.fuseiso and self.fuseiso:
-            opts = '-n'
-            extra_opts = '-oallow_other'
-            mount_cmd = cf.cmd['fuseiso']
-        else:
-            opts = '-o loop,ro'
-            extra_opts = ''
-            mount_cmd = cf.cmd['mount']
-            if readfile('/selinux/enforce') == '1':
-                opts = opts + ',context=system_u:object_r:httpd_sys_content_t:s0'
-        for iso in self.isos:
-            if cf.shareiso:
-                symlink(iso, os.path.join(self.dir, 'iso'))
-            discnr = discnr + 1
-            discstr = 'disc'
-            if regexp.match(iso, 1):
-                discstr = 'CD'
-            disc = '%s%s' % (discstr, discnr)
-            discs.append(disc)
-            mount = os.path.join(self.dir, disc)
-            if not os.path.isfile(cf.cmd['mount']):
-                die(4, 'mount command not %s' % cf.cmd['mount'])
-            mount2 = mountpoint(iso)
-            if not mount2:
-                if os.path.exists(mount) and not os.path.isdir(mount):
-                    os.rename(mount, os.tempnam(os.path.dirname(mount), 'bak-'))
-                mkdir(mount)
-                if not os.path.ismount(mount):
-                    info(2, '%s: Mount ISO %s to %s' % (self.nick, os.path.basename(iso), mount))
-                    run('%s %s %s %s %s' % (mount_cmd, opts, iso, mount, extra_opts))
-                    mountpoints.append(mount)
-            else:
-                if mount2 != mount:
-#                    if os.path.exists(mount):
-#                        remove(mount)
-                    info(5, '%s: %s already mounted, symlink ISO to %s' % (self.nick, os.path.basename(iso), mount))
-                    symlink(mount2, mount)
-
-        if cf.cmd['unionfs'] and cf.unionfs and self.unionfs:
-            ### This will be the name of our filesystem (first column of /etc/mtab)
-            unionfs_name = "%s-%s-fuse" % (self.dist, self.arch)
-
-            ### We need to make sure that our directory isn't already mounted (in the case of mrepo -g)
-            if not mountpoint(unionfs_name):
-                ### Create the 'os' directory for the merged trees.
-                unionfs_mountpoint = os.path.join(self.dir, 'os')
-                mkdir(unionfs_mountpoint)
-                info(2, "%s -o allow_other,fsname=%s %s %s" %
-                     (cf.cmd['unionfs'], unionfs_name,
-                      ':'.join(mountpoints), unionfs_mountpoint))
-                run("%s -o allow_other,fsname=%s %s %s" %
-                    (cf.cmd['unionfs'], unionfs_name,
-                     ':'.join(mountpoints), unionfs_mountpoint))
-
-        return discs
-
-    def umount(self):
-        "Umount all mounted ISOs"
-        discnr = 0
-        regexp = re.compile('.+[_-]CD[0-9]?\..+')
-
-        ### Remove any unionfs mounted directories first.
-        if os.path.ismount(os.path.join(self.dir, 'os')):
-            umount_cmd = 'fusermount -u'
-            info(2, '%s %s' % (umount_cmd, os.path.join(self.dir, 'os')))
-            run('%s %s' % (umount_cmd, os.path.join(self.dir, 'os')))
-
-        for iso in self.isos:
-            discnr = discnr + 1
-            discstr = 'disc'
-            if regexp.match(iso, 1):
-                discstr = 'CD'
-            mount = os.path.join(self.dir, discstr + str(discnr))
-            if not os.path.isfile(cf.cmd['umount']):
-                die(5, 'umount command not %s' % cf.cmd['umount'])
-            if os.path.ismount(mount):
-                if mountpoint(mount):
-                    info(2, '%s: Unmount ISO %s from %s' % (self.nick, os.path.basename(iso), mount))
-                    run('%s %s' % (cf.cmd['umount'], mount))
-                else:
-                    info(2, '%s: Unmount ISO %s from %s' % (self.nick, os.path.basename(iso), mount))
-                    run('%s %s' % ('fusermount -u', mount))
-
-    def pxe(self):
-        "Create PXE boot setup"
-        tftpbootdir = os.path.dirname(cf.tftpdir)
-        if cf.tftpdir and tftpbootdir and os.path.isdir(cf.tftpdir):
-            tftpdir = os.path.join(cf.tftpdir, self.nick)
-            mkdir(tftpdir)
-            info(1, '%s: Symlink pxe boot files to %s ' % (self.nick, tftpdir))
-            mkdir(os.path.join(tftpdir, 'pxelinux.cfg'))
-
-            ### For Red Hat
-            for file in glob.glob(self.dir + '/disc1/images/pxeboot/initrd*.img'):
-                copy(file, tftpdir)
-            for file in glob.glob(self.dir + '/disc1/images/pxeboot/vmlinuz'):
-                copy(file, tftpdir)
-
-            if cf.pxelinux:
-                copy(cf.pxelinux, tftpdir)
-
-    def html(self):
-        "Put html information in repository"
-        mkdir(self.dir)
-        if not op.dryrun:
-            open(os.path.join(self.dir, '.title'), 'w').write(self.name)
-        symlink(os.path.join(cf.htmldir, 'HEADER.repo.shtml'), os.path.join(self.dir, 'HEADER.shtml'))
-        symlink(os.path.join(cf.htmldir, 'README.repo.shtml'), os.path.join(self.dir, 'README.shtml'))
-
 
 class Repo:
     def __init__(self, name, url, dist, cf):
@@ -731,23 +504,8 @@ class Repo:
                     continue
                 if s in ('rsync', ):
                     mirrorrsync(url, self.srcdir)
-                elif s in ('ftp', ):
-                    if cf.cmd['mirrordir']:
-                        mirrormirrordir(url, self.srcdir)
-                    else:
-                        mirrorlftp(url, self.srcdir, self.dist)
-                elif s in ('fish', 'http', 'https', 'sftp'):
+                elif s in ('ftp', 'fish', 'http', 'https', 'sftp'):
                     mirrorlftp(url, self.srcdir, self.dist)
-                elif s in ('file', ''):
-                    mirrorfile(url, self.srcdir)
-                elif s in ('mrepo', ):
-                    mirrormrepo(url, self.srcdir)
-                elif s in ('mc', ):
-                    mirrormirrordir(url, self.srcdir)
-                elif s in ('rhn', 'rhns'):
-                    mirrorrhnget(url, self.srcdir, self.dist)
-                elif s in ('you', ):
-                    mirroryouget(url, self.srcdir, self.dist)
                 elif s in ('reposync', 'reposyncs', 'reposyncf'):
                     mirrorreposync(url, self.srcdir, '%s-%s' % (self.dist.nick, self.name), self.dist)
                 else:
@@ -850,7 +608,7 @@ class Repo:
             error(0, '%s: Lockfile %s does not exist. Cannot unlock. Something fishy here ?' % (self.dist.nick, lockfile))
 
     def createmd(self):
-        metadata = ('apt', 'createrepo', 'repomd', 'repoview', 'yum')
+        metadata = ('createrepo', 'repomd', 'repoview')
         index = ('repoview',)
 
         if not self.changed and not op.force:
@@ -861,10 +619,6 @@ class Repo:
             for md in self.dist.metadata:
                 if md in ('createrepo', 'repomd'):
                     self.repomd()
-                elif md in ('yum',):
-                    self.yum()
-                elif md in ('apt',):
-                    self.apt()
                 elif md not in index:
                     error(0, 'The %s metadata is unknown.' % md)
 
@@ -911,73 +665,6 @@ class Repo:
             if ret:
                 raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['createrepo'], ret)))
 
-    def yum(self):
-        "Create a (old-style) yum repository"
-        if not cf.cmd['yumarch']:
-            return
-        opts = ''
-        if op.verbose <= 2:
-            opts = ' -q' + opts
-        elif op.verbose == 4:
-            opts = ' -v' + opts
-        elif op.verbose >= 5:
-            opts = ' -vv' + opts
-        if op.dryrun:
-            opts = opts + ' -n'
-        if os.path.exists(self.wwwdir):
-            if os.path.isdir(os.path.join(self.wwwdir, '.oldheaders')):
-                remove(os.path.join(self.wwwdir, '.oldheaders'))
-            info(2, '%s: Create (old-style) yum repository for %s' % (self.dist.nick, self.name))
-            ret = run('%s %s -l %s' % (cf.cmd['yumarch'], opts, self.wwwdir))
-            if ret:
-                raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['yumarch'], ret)))
-
-    def apt(self):
-        "Create an (old-style) apt repository"
-        if not cf.cmd['genbasedir']:
-            return
-        opts = ''
-        if op.verbose >= 3:
-            opts = ' --progress' + opts
-
-        mkdir(os.path.join(self.dist.dir, 'base'))
-
-        ### Write out /srcdir/nick/base/release
-        # TODO: should not be done per repository
-        releasefile = os.path.join(self.dist.dir, 'base', 'release')
-        if not os.path.exists(releasefile):
-            open(releasefile, 'w').write(
-                'Origin: %s\n'\
-                'Label: %s\n'\
-                'Suite: Unknown\n'\
-                'Codename: %s\n'\
-                'Date: unknown\n'\
-                'Architectures: %s\n'\
-                'Components: \n'\
-                'Description: %s\n'\
-                'MD5Sum:\n'\
-                % (os.uname()[1], self.dist.name, self.dist.nick, self.dist.arch, self.dist.name))
-
-        ### Write out /srcdir/nick/base/release.repo
-        releasefile = os.path.join(self.dist.dir, 'base', 'release.' + self.name)
-        if not os.path.exists(releasefile):
-            open(releasefile, 'w').write(
-                'Archive: %s\n'\
-                'Component: %s\n'\
-                'Version: %s\n'\
-                'Origin: %s\n'\
-                'Label: Repository %s for %s\n'\
-                'Architecture: %s\n'\
-                'NotAutomatic: false\n'\
-                % (self.name, self.name, self.dist.release, os.uname()[1], self.name, self.dist.name, self.dist.arch))
-
-        info(2, '%s: Create (old-style) apt repository for %s' % (self.dist.nick, self.name))
-#       if self.newrepos == self.oldrepos:
-#           run('%s %s --flat --bloat --bz2only %s' % (cf.cmd['genbasedir'], opts, self.dist.dir))
-#       else:
-        ret = run('%s %s --flat --bloat --bz2only --partial %s %s' % (cf.cmd['genbasedir'], opts, self.dist.dir, self.name))
-        if ret:
-            raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['genbasedir'], ret)))
 
     def repoview(self):
         "Create a repoview index"
@@ -1123,15 +810,6 @@ def substitute(string, vars, recursion=0):
 
     string = _subst_sub(_substrepl, string)
     return string
-
-
-def mountpoint(dev):
-    "Return the mountpoint of a mounted device/file"
-    for entry in readfile('/etc/mtab').split('\n'):
-        if entry:
-            cols = entry.split()
-            if dev == cols[0]:
-                return cols[1]
 
 
 def distsort(a, b):
@@ -1310,33 +988,6 @@ def mirrorrsync(url, path):
         raise(mrepoMirrorException('Failed with return code: %s' % ret))
 
 
-def mirrormirrordir(url, path):
-    "Mirror everything from a ftp:// or mc:// URL"
-    if not cf.cmd['mirrordir']:
-        error(1, 'mirrordir was not found. ftp and mc support (using mirrordir) is therefore disabled.')
-        return
-    mkdir(path)
-
-    opts = cf.mirrordiroptions
-    if op.verbose >= 3:
-        opts = opts + ' -v' * (op.verbose - 3)
-    if op.dryrun:
-        opts = opts + ' --dry-run'
-    if cf.mirrordircleanup:
-        opts = opts + ' -k'
-
-#   opts = opts + ' -I \"*.rpm\"'
-    opts = opts + ' -G \"headers\" -G \"repodata\"'
-    if cf.mirrordirexclsrpm:
-        opts = opts + ' -G \"*.src.rpm\" -G \"SRPMS\"'
-    if cf.mirrordirexcldebug:
-        opts = opts + ' -G \"*-debuginfo-*.rpm\" -G \"debug\"'
-
-    ret = run("%s %s '%s' '%s'" % (cf.cmd['mirrordir'], opts, url, path), dryrun=True)
-    if ret:
-        raise(mrepoMirrorException('Failed with return code: %s' % ret))
-
-
 def mirrorlftp(url, path, dist):
     "Mirror everything from a http://, ftp://, sftp://, fish:// URL"
     if not cf.cmd['lftp']:
@@ -1376,122 +1027,6 @@ def mirrorlftp(url, path, dist):
         mirroropts = mirroropts + ' -X \"*-debuginfo-*.rpm\" -X \"/debug/\"'
 
     ret = run('%s %s -c \'%s mirror %s %s %s\'' % (cf.cmd['lftp'], opts, cmds, mirroropts, url, path), dryrun=True)
-    if ret:
-        raise(mrepoMirrorException('Failed with return code: %s' % ret))
-
-
-def mirrorfile(url, path):
-    "Mirror everything from a file:// URL by symlinking"
-    dir = url.replace('file://', '')
-    if os.path.isdir(dir):
-        symlink(dir, path)
-#   else: ### FIXME: Only if ISO file
-#       if not os.path.isabs(file):
-#           file = os.path.join(cf.srcdir, 'iso', file)
-#       isolist = glob.glob(file)
-#       isolist.sort()
-#       for iso in isolist:
-#           if os.path.isfile(iso):
-#               print 'Please mount %s to %s' % (iso, path)
-
-
-def mirrormrepo(url, path):
-    "Mirror everything from a local mrepo mirror by symlinking"
-    pathname = url.replace('mrepo://', '')
-    while pathname.endswith('/'):
-        pathname = pathname[0:-1]
-    while path.endswith('/'):
-        path = pathname[0:-1]
-    symlink(os.path.join(cf.srcdir, pathname), path)
-#   basename = os.path.basename(pathname)
-#   symlink(os.path.join(cf.srcdir, pathname), os.path.join(path, basename))
-
-
-def mirrorrhnget(url, path, dist):
-    "Mirror everything from a rhn:// or rhns:// URL"
-    if not cf.cmd['rhnget']:
-        error(1, 'rhnget was not found. rhn and rhns support is therefore disabled.')
-        return
-    mkdir(path)
-
-    opts = cf.rhngetoptions
-    if op.verbose >= 3:
-        opts = opts + ' -v' * (op.verbose - 3)
-    if op.dryrun:
-        opts = opts + ' --dry-run'
-    if cf.rhngetcleanup:
-        opts = opts + ' --delete'
-    if cf.rhngetdownloadall:
-        opts = opts + ' --download-all'
-
-    systemidpath = dist.systemid or os.path.join(cf.srcdir, dist.nick, 'systemid')
-
-    if os.path.isfile(systemidpath):
-        opts = opts + ' --systemid="%s"' % systemidpath
-
-    if dist.rhnrelease:
-        opts = opts + ' --release="%s"' % dist.rhnrelease
-
-    if cf.rhnlogin:
-        rhnlogin = cf.rhnlogin.split(':')
-        if len(rhnlogin) > 0:
-            opts = opts + ' --username="%s"' % rhnlogin[0]
-        if len(rhnlogin) > 1:
-            opts = opts + ' --password="%s"' % rhnlogin[1]
-
-##  opts = opts + ' -I \"*.rpm\"'
-#   opts = opts + ' -G \"headers\" -G \"repodata\"'
-#   if cf.mirrordirexclsrpm:
-#       opts = opts + ' -G \"*.src.rpm\" -G \"SRPMS\"'
-#   if cf.mirrordirexcldebug:
-#       opts = opts + ' -G \"*-debuginfo-*.rpm\" -G \"debug\"'
-
-    ret = run("%s %s '%s' '%s'" % (cf.cmd['rhnget'], opts, url, path), dryrun=True)
-    if ret:
-        raise(mrepoMirrorException('Failed with return code: %s' % ret))
-
-
-def mirroryouget(url, path, dist):
-    "Mirror everything from a you:// URL"
-    if not cf.cmd['youget']:
-        error(1, 'youget was not found. YOU support is therefore disabled.')
-        return
-    mkdir(path)
-
-    url = url.replace('you://', 'https://')
-
-    opts = cf.rhngetoptions
-    if op.verbose >= 3:
-        opts = opts + ' -v' * (op.verbose - 3)
-    if op.dryrun:
-        opts = opts + ' --dry-run'
-    if cf.rhngetcleanup:
-        opts = opts + ' --delete'
-    if cf.rhngetdownloadall:
-        opts = opts + ' --download-all'
-
-    credpath = os.path.join(cf.srcdir, dist.nick)
-    if os.path.isdir(credpath):
-        opts = opts + ' --credpath="%s"' % credpath
-
-#    if dist.rhnrelease:
-#        opts = opts + ' --release="%s"' % dist.rhnrelease
-
-#    if cf.rhnlogin:
-#        rhnlogin = cf.rhnlogin.split(':')
-#        if len(rhnlogin) > 0:
-#            opts = opts + ' --username="%s"' % rhnlogin[0]
-#        if len(rhnlogin) > 1:
-#            opts = opts + ' --password="%s"' % rhnlogin[1]
-
-##  opts = opts + ' -I \"*.rpm\"'
-#   opts = opts + ' -G \"headers\" -G \"repodata\"'
-#   if cf.mirrordirexclsrpm:
-#       opts = opts + ' -G \"*.src.rpm\" -G \"SRPMS\"'
-#   if cf.mirrordirexcldebug:
-#       opts = opts + ' -G \"*-debuginfo-*.rpm\" -G \"debug\"'
-
-    ret = run("%s %s '%s' '%s'" % (cf.cmd['youget'], opts, url, path), dryrun=True)
     if ret:
         raise(mrepoMirrorException('Failed with return code: %s' % ret))
 
@@ -1556,30 +1091,6 @@ def mirrorreposync(url, path, reponame, dist):
         raise(mrepoMirrorException('Failed with return code: %s' % ret))
 
 
-def hardlink(srcdir):
-    info(1, 'Hardlinking duplicate packages in %s.' % srcdir)
-    opts = ''
-    if cf.cmd['hardlinkpy']:
-        if op.verbose <= 2:
-            opts = ' -v 0'
-        else:
-            opts = ' -v %d' % (op.verbose - 2)
-        run('%s %s %s' % (cf.cmd['hardlinkpy'], os.path.join(srcdir, ''), opts))
-    elif cf.cmd['hardlink++']:
-        if op.verbose <= 2:
-            opts = '>/dev/null'
-        run('%s %s %s' % (cf.cmd['hardlink++'], os.path.join(srcdir, ''), opts))
-    elif cf.cmd['hardlink']:
-        if op.verbose:
-            opts = opts + ' -' + ('v' * (op.verbose - 2))
-        if op.dryrun:
-            opts = opts + ' -n'
-        run('%s -c %s %s' % (cf.cmd['hardlink'], opts, os.path.join(srcdir, '')), dryrun=True)
-    else:
-        info(1, 'hardlink was not found, hardlink support is therefore disabled.')
-        return
-
-
 def rpmlink((dist, repo), dirpath, filelist):
     archlist = ['noarch', ]
     if archs.has_key(dist.arch):
@@ -1605,11 +1116,6 @@ def which(cmd):
             info(5, 'Found command %s in path %s' % (cmd, path))
             return os.path.join(path, cmd)
     return ''
-
-
-def htmlindex():
-    symlink(cf.htmldir + '/HEADER.index.shtml', cf.wwwdir + '/HEADER.shtml')
-    symlink(cf.htmldir + '/README.index.shtml', cf.wwwdir + '/README.shtml')
 
 
 def mail(subject, msg):
@@ -1742,8 +1248,8 @@ def main():
             cf.cmd[cmd] = ''
         else:
             cf.cmd[cmd] = ' '.join(cmdlist)
-    if not cf.cmd['createrepo'] and not cf.cmd['yumarch'] and not cf.cmd['genbasedir']:
-        error(1, 'No tools found to generate repository metadata. Please install apt, yum or createrepo.')
+    if not cf.cmd['createrepo']:
+        error(1, 'No tools found to generate repository metadata. Please install createrepo.')
 
     ### Set proxy-related environment variables
     if cf.no_proxy:
@@ -1777,14 +1283,6 @@ def main():
 
     ### Mounting and mirroring available distributions/repositories
     for dist in dists:
-        dist.findisos()
-        ### Mount ISOs
-        if dist.isos:
-            if op.umount or op.remount:
-                dist.umount()
-            if not op.umount or op.remount:
-                dist.discs = dist.mount()
-
         if op.update:
             msg = msg + '\n\nDist: %s (%s)' % (dist.name, dist.nick)
             info(1, '%s: Updating %s' % (dist.nick, dist.name))
@@ -1796,10 +1294,7 @@ def main():
             for repo in dist.listrepos(op.repos):
                 if not repo.lock('update'):
                     continue
-                if repo.name in ('os', 'core'):
-                    if not dist.isos:
-                        repo.mirror()
-                elif repo in dist.listrepos():
+                if repo in dist.listrepos():
                     repo.mirror()
                 else:
                     info(2, '%s: Repository %s does not exist' % (dist.nick, repo.name))
@@ -1858,20 +1353,13 @@ def main():
     if not op.generate:
         sys.exit(0)
 
-    if op.htmlindex:
-        htmlindex()
 
     ### Generating metadata for available distributions/repositories
     for dist in dists:
-        dist.html()
-
         info(1, '%s: Generating %s meta-data' % (dist.nick, dist.name))
 
         dist.genmetadata()
-        dist.pxe()
 
-    if cf.hardlink and not op.dists:
-        hardlink(cf.srcdir)
 
 ### Unbuffered sys.stdout
 sys.stdout = os.fdopen(1, 'w', 0)
