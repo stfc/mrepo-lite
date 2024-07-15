@@ -61,7 +61,7 @@ EXITCODE = 0
 _SUBST_SUB = re.compile(r'\$\{?(\w+)\}?').sub
 
 
-class Options:
+class Options(object):
     def __init__(self, args):
         self.configfile = '/etc/mrepo.conf'
         self.dists = []
@@ -163,7 +163,7 @@ mrepo options:
 '''
 
 
-class Config:
+class Config(object):
     def __init__(self):
         self.read(OPTIONS.configfile)
 
@@ -326,7 +326,7 @@ class Config:
         return var
 
 
-class Dist:
+class Dist(object):
     def __init__(self, dist, arch, config):
         self.arch = arch
         self.dist = dist
@@ -435,7 +435,7 @@ class Dist:
             repo.changed = True
 
 
-class Repo:
+class Repo(object):
     def __init__(self, name, url, dist, config):
         self.name = name
         self.url = url
