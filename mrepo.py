@@ -492,10 +492,10 @@ class Repo:
         filelist = set()
 
         def addfile((filelist, ), path, files):
-            for file in files:
-                if os.path.exists(os.path.join(path, file)) and file.endswith('.rpm'):
-                    size = os.stat(os.path.join(path, file)).st_size
-                    filelist.add((file, size))
+            for filename in files:
+                if os.path.exists(os.path.join(path, filename)) and filename.endswith('.rpm'):
+                    size = os.stat(os.path.join(path, filename)).st_size
+                    filelist.add((filename, size))
 
         os.path.walk(self.srcdir, addfile, (filelist,))
         return filelist
@@ -639,83 +639,84 @@ class mrepoGenerateException(Exception):
         return repr(self.value)
 
 
-def sha1dir(dir):
+def sha1dir(directory):
     "Return sha1sum of a directory"
-    files = glob.glob(dir + '/*.rpm')
+    files = glob.glob(directory + '/*.rpm')
     files.sort()
     output = ''
-    for file in files:
-        output = output + os.path.basename(file) + ' ' + str(os.stat(file).st_size) + '\n'
+    for filename in files:
+        output = output + os.path.basename(filename) + ' ' + str(os.stat(filename).st_size) + '\n'
     return sha1hash(output).hexdigest()
 
 
-def writesha1(file, sha1sum=None):
+def writesha1(filename, sha1sum=None):
     "Write out sha1sum"
-    repodir = os.path.dirname(file)
+    repodir = os.path.dirname(filename)
     if not sha1sum:
         sha1sum = sha1dir(repodir)
     if not op.dryrun:
-        open(file, 'w').write(sha1sum)
+        open(filename, 'w').write(sha1sum)
 
 
-def error(level, str):
+def error(level, text):
     "Output error message"
     if level <= op.verbose:
-        sys.stderr.write('mrepo: %s\n' % str)
+        sys.stderr.write('mrepo: %s\n' % text)
 
 
-def info(level, str):
+def info(level, text):
     "Output info message"
     if level <= op.verbose:
-        sys.stdout.write('%s\n' % str)
+        sys.stdout.write('%s\n' % text)
 
 
-def die(ret, str):
+def die(ret, text):
     "Print error and exit with errorcode"
-    error(0, str)
+    error(0, text)
     sys.exit(ret)
 
 
-def run(str, dryrun=False):
+def run(text, dryrun=False):
     "Run command, accept user input, and print output when needed."
-    str = 'exec ' + str
+    text = 'exec ' + text
     if op.verbose <= 2:
-        str = str + ' >/dev/null'
+        text = text + ' >/dev/null'
     if not op.dryrun or dryrun:
-        info(5, 'Execute: %s' % str)
-        return os.system(str)
+        info(5, 'Execute: %s' % text)
+        return os.system(text)
     else:
-        info(1, 'Not execute: %s' % str)
+        info(1, 'Not execute: %s' % text)
 
 
-def readfile(file, len=0):
+def readfile(filename, size=0):
     "Return content of a file"
-    if not os.path.isfile(file):
+    if not os.path.isfile(filename):
         return None
-    if len:
-        return open(file, 'r').read(len)
-    return open(file, 'r').read()
+    if size:
+        return open(filename, 'r').read(size)
+    return open(filename, 'r').read()
 
 
-def writefile(file, str):
+def writefile(filename, text):
     if op.dryrun:
         return
-    fd = open(file, 'w')
-    fd.write(str)
+    fd = open(filename, 'w')
+    fd.write(text)
     fd.close()
 
 _subst_sub = re.compile('\$\{?(\w+)\}?').sub
 
 
-def substitute(string, vars, recursion=0):
+
+def substitute(string, variables, recursion=0):
     "Substitute variables from a string"
     if recursion > 10:
         raise RuntimeError, "variable substitution loop"
 
     def _substrepl(matchobj):
-        value = vars.get(matchobj.group(1))
+        value = variables.get(matchobj.group(1))
         if value is not None:
-            return substitute(value, vars, recursion + 1)
+            return substitute(value, variables, recursion + 1)
         return matchobj.group(0)
 
     string = _subst_sub(_substrepl, string)
@@ -742,12 +743,12 @@ def vercmp(a, b):
     return cmp(len(al), len(bl))
 
 
-def symlinkglob(str, *targets):
+def symlinkglob(text, *targets):
     "Symlink files to multiple targets"
-    for file in glob.glob(str):
+    for filename in glob.glob(text):
         for target in targets:
             mkdir(target)
-            symlink(file, target)
+            symlink(filename, target)
 
 
 def abspath(path, reference):
@@ -815,27 +816,27 @@ def copy(src, dst):
             shutil.copytree(src, dst)
 
 
-def remove(file):
+def remove(filename):
     "Remove files or directories"
-    if isinstance(file, types.StringType):
+    if isinstance(filename, types.StringType):
         if op.dryrun:
             return
-        if os.path.islink(file):
-            os.unlink(file)
-        elif os.path.isdir(file):
+        if os.path.islink(filename):
+            os.unlink(filename)
+        elif os.path.isdir(filename):
             try:
-                os.rmdir(file)
+                os.rmdir(filename)
             except:
-                os.path.walk(file, removedir, ())
-                os.rmdir(file)
-        elif os.path.isfile(file) or os.path.islink(file):
-            os.unlink(file)
+                os.path.walk(filename, removedir, ())
+                os.rmdir(filename)
+        elif os.path.isfile(filename) or os.path.islink(filename):
+            os.unlink(filename)
     else:
-        for f in file:
+        for f in filename:
             remove(f)
 
 
-def removedir(void, dir, files):
+def removedir(_, dir, files):
     for file in files:
         remove(os.path.join(dir, file))
 
@@ -1085,45 +1086,44 @@ def synciter(a, b, key=None, keya=None, keyb=None):
         belem = _nextNone(bi)
 
 
-def listrpms(dirs, relative=''):
+def listrpms(directories, relative=''):
     """return a list of rpms in the given directories as a list of (name, path) tuples
     if relative is specified, return the paths relative to this directory"""
-    if not isinstance(dirs, (list, tuple)):
-        dirs = (dirs,)
+    if not isinstance(directories, (list, tuple)):
+        directories = (directories,)
     if relative and not relative.endswith('/'):
         relative += '/'
     isdir = os.path.isdir
     pathjoin = os.path.join
     pathexists = os.path.exists
 
-    def processdir(rpms, path, files):
+    def processdir(rpms, path, filenames):
+        final_path = path
         if relative:
-            path2 = relpath(path, relative)
-        else:
-            path2 = path
-        for f in files:
-            pf = pathjoin(path, f)
-            if f.endswith('.rpm') and pathexists(pf) and not isdir(pf):
-                rpms.append((f, path2))
+            final_path = relpath(path, relative)
+        for filename in filenames:
+            filepath = pathjoin(path, filename)
+            if filename.endswith('.rpm') and pathexists(filepath) and not isdir(filepath):
+                rpms.append((filename, final_path))
 
     rpms = []
-    for dir in dirs:
-        if not dir.startswith('/'):
-            dir = pathjoin(relative, dir)
-        os.path.walk(dir, processdir, rpms)
+    for directory in directories:
+        if not directory.startswith('/'):
+            directory = pathjoin(relative, directory)
+        os.path.walk(directory, processdir, rpms)
     rpms.sort()
     return rpms
 
 
-def listrpmlinks(dir):
+def listrpmlinks(directory):
     islink = os.path.islink
     readlink = os.readlink
     pathjoin = os.path.join
     links = []
-    for f in os.listdir(dir):
-        path = pathjoin(dir, f)
-        if islink(path) and f.endswith('.rpm'):
-            links.append((f, readlink(path)))
+    for filename in os.listdir(directory):
+        path = pathjoin(directory, filename)
+        if islink(path) and filename.endswith('.rpm'):
+            links.append((filename, readlink(path)))
     return links
 
 
