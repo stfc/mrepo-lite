@@ -52,10 +52,6 @@ variables = {}
 
 disable = ('no', 'off', 'false', '0')
 
-for scheme in ('reposync', 'reposyncs', 'reposyncf'):
-    urlparse.uses_netloc.insert(0, scheme)
-    urlparse.uses_query.insert(0, scheme)
-
 
 class Options:
     def __init__(self, args):
