@@ -72,13 +72,13 @@ class Testlinksync(unittest.TestCase):
         class TestConfig:
             pass
 
-        self.cf = cf = TestConfig()
+        self.CONFIG = config = TestConfig()
 
-        cf.srcdir = path_join(tmpdir, 'src')
-        cf.wwwdir = path_join(tmpdir, 'dst')
+        config.srcdir = path_join(tmpdir, 'src')
+        config.wwwdir = path_join(tmpdir, 'dst')
 
-        self.dist = mrepo.Dist('testdist', 'i386', cf)
-        self.repo = repo = mrepo.Repo('testrepo', '', self.dist, cf)
+        self.dist = mrepo.Dist('testdist', 'i386', config)
+        self.repo = repo = mrepo.Repo('testrepo', '', self.dist, config)
         srcdir = repo.srcdir
 
 
@@ -96,7 +96,7 @@ class Testlinksync(unittest.TestCase):
         __touch(path_join(srcdir, 'a', '2.rpm'))
         __touch(path_join(srcdir, 'a', 'a.rpm'))
 
-        self.localdir = localdir = path_join(cf.srcdir, 'testdist-i386', 'local')
+        self.localdir = localdir = path_join(config.srcdir, 'testdist-i386', 'local')
         os.makedirs(localdir)
         for f in ('local.rpm', 'dont_sync2.txt'):
             __touch(path_join(localdir, f))
