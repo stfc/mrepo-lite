@@ -411,9 +411,9 @@ class Dist(object):
         # destfiles is a list of (link_target_base, link_target_dir) tuples
         destfiles.sort()
 
-        def keyfunc(x):
+        def keyfunc(key):
             # compare the basenames
-            return x[0]
+            return key[0]
 
         changed = False
         for srcfile, destfile in synciter(srcfiles, destfiles, key=keyfunc):
