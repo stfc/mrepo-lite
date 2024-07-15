@@ -43,7 +43,6 @@ setup(
         ('/etc/httpd/conf.d', ['config/httpd/mrepo.conf']),
         ('/var/cache/mrepo', []),
         ('/var/www/mrepo', []),
-        ('/var/mrepo/all/local', []),
     ],
     download_url = 'http://dag.wieers.com/home-made/mrepo/mrepo-0.8.4svn.tar.gz',
     license = 'GPL',
