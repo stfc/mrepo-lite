@@ -201,7 +201,7 @@ class Config(object):
         self.ftp_proxy = self.getoption('main', 'ftp_proxy', None)
         self.http_proxy = self.getoption('main', 'http_proxy', None)
         self.https_proxy = self.getoption('main', 'https_proxy', None)
-        self.RSYNC_PROXY = self.getoption('main', 'RSYNC_PROXY', None)
+        self.rsync_proxy = self.getoption('main', 'RSYNC_PROXY', None)
 
         self.cmd = {}
         self.cmd['createrepo'] = self.getoption('main', 'createrepocmd', '/usr/bin/createrepo')
@@ -1175,8 +1175,8 @@ def main():
         os.environ['http_proxy'] = CONFIG.http_proxy
     if CONFIG.https_proxy:
         os.environ['https_proxy'] = CONFIG.https_proxy
-    if CONFIG.RSYNC_PROXY:
-        os.environ['RSYNC_PROXY'] = CONFIG.RSYNC_PROXY
+    if CONFIG.rsync_proxy:
+        os.environ['RSYNC_PROXY'] = CONFIG.rsync_proxy
 
     ### Select list of distributions in order of appearance
     if not OPTIONS.dists:
