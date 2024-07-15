@@ -39,7 +39,7 @@ __version__ = "$Revision$"
 
 VERSION = "0.8.9"
 
-archs = {
+ARCHS = {
     'alpha': ('alpha', 'alphaev5', 'alphaev56', 'alphaev6', 'alphaev67'),
     'i386': ('i386', 'i486', 'i586', 'i686', 'athlon'),
     'ia64': ('i386', 'i686', 'ia64'),
@@ -52,9 +52,9 @@ archs = {
     's390x': ('s390', 's390x'),
 }
 
-variables = {}
+VARIABLES = {}
 
-disable = ('no', 'off', 'false', '0')
+DISABLE = ('no', 'off', 'false', '0')
 
 
 class Options:
@@ -177,7 +177,7 @@ class Config:
         self.arch = self.getoption('main', 'arch', 'i386')
         self.metadata = self.getoption('main', 'metadata', 'repomd')
 
-        self.quiet = self.getoption('main', 'quiet', 'no') not in disable
+        self.quiet = self.getoption('main', 'quiet', 'no') not in DISABLE
         if op.verbose == 1 and self.quiet:
             op.verbose = 0
 
@@ -196,28 +196,28 @@ class Config:
         self.createrepooptions = self.getoption('main', 'createrepo-options', '--pretty --database --update')
 
         self.lftpbwlimit = self.getoption('main', 'lftp-bandwidth-limit', None)
-        self.lftpcleanup = self.getoption('main', 'lftp-cleanup', 'yes') not in disable
-        self.lftpexcldebug = self.getoption('main', 'lftp-exclude-debug', 'yes') not in disable
-        self.lftpexclsrpm = self.getoption('main', 'lftp-exclude-srpm', 'yes') not in disable
+        self.lftpcleanup = self.getoption('main', 'lftp-cleanup', 'yes') not in DISABLE
+        self.lftpexcldebug = self.getoption('main', 'lftp-exclude-debug', 'yes') not in DISABLE
+        self.lftpexclsrpm = self.getoption('main', 'lftp-exclude-srpm', 'yes') not in DISABLE
         self.lftpoptions = self.getoption('main', 'lftp-options', '')
         self.lftpcommands = self.getoption('main', 'lftp-commands', '')
         self.lftpmirroroptions = self.getoption('main', 'lftp-mirror-options', '-c')
         self.lftptimeout = self.getoption('main', 'lftp-timeout', None)
 
         self.reposyncoptions = self.getoption('main', 'reposync-options', '')
-        self.reposynccleanup = self.getoption('main', 'reposync-cleanup', 'yes') not in disable
-        self.reposyncnewestonly = self.getoption('main', 'reposync-newest-only', 'no') not in disable
-        self.reposyncexcldebug = self.getoption('main', 'reposync-exclude-debug', 'yes') not in disable
-        self.reposyncnorepopath = self.getoption('main', 'reposync-no-repopath', 'yes') not in disable
+        self.reposynccleanup = self.getoption('main', 'reposync-cleanup', 'yes') not in DISABLE
+        self.reposyncnewestonly = self.getoption('main', 'reposync-newest-only', 'no') not in DISABLE
+        self.reposyncexcldebug = self.getoption('main', 'reposync-exclude-debug', 'yes') not in DISABLE
+        self.reposyncnorepopath = self.getoption('main', 'reposync-no-repopath', 'yes') not in DISABLE
         self.reposynctimeout = self.getoption('main', 'reposync-timeout', '90')
         self.reposyncminrate = self.getoption('main', 'reposync-minrate', '250')
 
         self.rsyncbwlimit = self.getoption('main', 'rsync-bandwidth-limit', None)
-        self.rsynccleanup = self.getoption('main', 'rsync-cleanup', 'yes') not in disable
-        self.rsyncexclheaders = self.getoption('main', 'rsync-exclude-headers', 'yes') not in disable
-        self.rsyncexclrepodata = self.getoption('main', 'rsync-exclude-repodata', 'yes') not in disable
-        self.rsyncexcldebug = self.getoption('main', 'rsync-exclude-debug', 'yes') not in disable
-        self.rsyncexclsrpm = self.getoption('main', 'rsync-exclude-srpm', 'yes') not in disable
+        self.rsynccleanup = self.getoption('main', 'rsync-cleanup', 'yes') not in DISABLE
+        self.rsyncexclheaders = self.getoption('main', 'rsync-exclude-headers', 'yes') not in DISABLE
+        self.rsyncexclrepodata = self.getoption('main', 'rsync-exclude-repodata', 'yes') not in DISABLE
+        self.rsyncexcldebug = self.getoption('main', 'rsync-exclude-debug', 'yes') not in DISABLE
+        self.rsyncexclsrpm = self.getoption('main', 'rsync-exclude-srpm', 'yes') not in DISABLE
         self.rsyncoptions = self.getoption('main', 'rsync-options', '-rtHL --partial')
         self.rsynctimeout = self.getoption('main', 'rsync-timeout', None)
 
@@ -251,14 +251,14 @@ class Config:
         for section in ('variables', 'vars', 'DEFAULT'):
             if section in self.cfg.sections():
                 for option in self.cfg.options(section):
-                    variables[option] = self.cfg.get(section, option)
+                    VARIABLES[option] = self.cfg.get(section, option)
 
         for section in self.cfg.sections():
             if section in ('main', 'repos', 'variables', 'vars', 'DEFAULT'):
                 continue
             else:
                 ### Check if section has appended arch
-                for arch in archs.keys():
+                for arch in ARCHS.keys():
                     if section.endswith('-%s' % arch):
                         archlist = (arch,)
                         distname = section.split('-%s' % arch)[0]
@@ -281,11 +281,11 @@ class Config:
                         elif option in ('arch', 'dist'):
                             pass
                         elif option in ('disabled',):
-                            dist.enabled = self.cfg.get(section, option) in disable
+                            dist.enabled = self.cfg.get(section, option) in DISABLE
                         elif option in ('metadata',):
                             setattr(dist, option, self.cfg.get(section, option).split())
                         elif option in ('promoteepoch',):
-                            dist.promoteepoch = self.cfg.get(section, option) not in disable
+                            dist.promoteepoch = self.cfg.get(section, option) not in DISABLE
                         elif option in ('systemid',):
                             dist.systemid = self.cfg.get(section, option)
                         elif option in ('sslcert',):
@@ -341,7 +341,7 @@ class Dist:
 
     def rewrite(self):
         "Rewrite (string) attributes to replace variables by other (string) attributes"
-        varlist = variables
+        varlist = VARIABLES
         varlist.update({'arch': self.arch,
                         'nick': self.nick,
                         'dist': self.dist,
