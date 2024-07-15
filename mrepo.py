@@ -203,10 +203,10 @@ class Config:
         self.reposyncoptions = self.getoption('main', 'reposync-options', '')
         self.reposynccleanup = self.getoption('main', 'reposync-cleanup', 'yes') not in disable
         self.reposyncnewestonly = self.getoption('main', 'reposync-newest-only', 'no') not in disable
-        self.reposyncexcldebug = self.getoption('main','reposync-exclude-debug', 'yes') not in disable
-        self.reposyncnorepopath = self.getoption('main','reposync-no-repopath', 'yes') not in disable
-        self.reposynctimeout = self.getoption('main','reposync-timeout', '90')
-        self.reposyncminrate = self.getoption('main','reposync-minrate', '250')
+        self.reposyncexcldebug = self.getoption('main', 'reposync-exclude-debug', 'yes') not in disable
+        self.reposyncnorepopath = self.getoption('main', 'reposync-no-repopath', 'yes') not in disable
+        self.reposynctimeout = self.getoption('main', 'reposync-timeout', '90')
+        self.reposyncminrate = self.getoption('main', 'reposync-minrate', '250')
 
         self.rsyncbwlimit = self.getoption('main', 'rsync-bandwidth-limit', None)
         self.rsynccleanup = self.getoption('main', 'rsync-cleanup', 'yes') not in disable
