@@ -146,7 +146,9 @@ class Testlinksync(unittest.TestCase):
         """return a list of (linkname, linktarget) tuples for all files in a directory"""
         pj = os.path.join
         readlink = os.readlink
-        return [ (l, readlink(pj(dir, l))) for l in os.listdir(dir) ]
+        result = [ (l, readlink(pj(dir, l))) for l in os.listdir(dir) ]
+        result.sort()
+        return result
 
     def genlinks(self, links, dir=''):
         if not dir:
@@ -207,7 +209,6 @@ class Testlinksync(unittest.TestCase):
 
         actual = self.readlinks(repo.wwwdir)
         target = self.links
-        actual.sort()
         self.assertEqual(actual, target)
 
     def test_linksync_additional(self):
@@ -224,7 +225,6 @@ class Testlinksync(unittest.TestCase):
         self.dist.linksync(repo)
 
         actual = self.readlinks(repo.wwwdir)
-        actual.sort()
         target = self.links
         self.assertEqual(actual, target)
 
@@ -247,7 +247,6 @@ class Testlinksync(unittest.TestCase):
         self.dist.linksync(repo)
 
         actual = self.readlinks(repo.wwwdir)
-        actual.sort()
         target = self.links
         self.assertEqual(actual, target)
 
