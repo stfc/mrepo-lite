@@ -50,7 +50,6 @@ archs = {
 
 variables = {}
 
-enable = ('yes', 'on', 'true', '1')
 disable = ('no', 'off', 'false', '0')
 
 for scheme in ('reposync', 'reposyncs', 'reposyncf'):
