@@ -161,7 +161,7 @@ mrepo options:
 
 class Config:
     def __init__(self):
-        self.read(op.configfile)
+        self.read(OPTIONS.configfile)
 
         self.cachedir = self.getoption('main', 'cachedir', '/var/cache/mrepo')
         self.lockdir = self.getoption('main', 'lockdir', '/var/cache/mrepo')
@@ -178,8 +178,8 @@ class Config:
         self.metadata = self.getoption('main', 'metadata', 'repomd')
 
         self.quiet = self.getoption('main', 'quiet', 'no') not in DISABLE
-        if op.verbose == 1 and self.quiet:
-            op.verbose = 0
+        if OPTIONS.verbose == 1 and self.quiet:
+            OPTIONS.verbose = 0
 
         self.no_proxy = self.getoption('main', 'no_proxy', None)
         self.ftp_proxy = self.getoption('main', 'ftp_proxy', None)
@@ -361,7 +361,7 @@ class Dist:
             return self.repos
 
     def genmetadata(self):
-        for repo in self.listrepos(op.repos):
+        for repo in self.listrepos(OPTIONS.repos):
             if not repo.lock('generate'):
                 continue
 
@@ -403,7 +403,7 @@ class Dist:
                 base, _ = destfile
                 linkname = path_join(destdir, base)
                 info(5, 'Remove link: %s' % (linkname,))
-                if not op.dryrun:
+                if not OPTIONS.dryrun:
                     os.unlink(linkname)
                     changed = True
             elif destfile is None:
@@ -412,7 +412,7 @@ class Dist:
                 linkname = path_join(destdir, base)
                 target = path_join(srcdir, base)
                 info(5, 'New link: %s -> %s' % (linkname, target))
-                if not op.dryrun:
+                if not OPTIONS.dryrun:
                     os.symlink(target, linkname)
                     changed = True
             else:
@@ -423,7 +423,7 @@ class Dist:
                 if target != curtarget:
                     info(5, 'Changed link %s: current: %s, should be: %s' % (base, curtarget, target))
                     linkname = path_join(destdir, base)
-                    if not op.dryrun:
+                    if not OPTIONS.dryrun:
                         os.unlink(linkname)
                         os.symlink(target, linkname)
                         changed = True
@@ -460,7 +460,7 @@ class Repo:
             try:
                 info(2, '%s: Mirror packages from %s to %s' % (self.dist.nick, url, self.srcdir))
                 scheme = urlparse.urlparse(url)[0]
-                if scheme not in op.types:
+                if scheme not in OPTIONS.types:
                     info(4, 'Ignoring mirror action for type %s' % scheme)
                     continue
                 if scheme in ('rsync', ):
@@ -501,7 +501,7 @@ class Repo:
         sha1file = path_join(self.wwwdir, '.sha1sum')
         remove(sha1file + '.tmp')
         cursha1 = sha1dir(self.wwwdir)
-        if op.force:
+        if OPTIONS.force:
             pass
         elif os.path.isfile(sha1file):
             oldsha1 = open(sha1file).read()
@@ -529,7 +529,7 @@ class Repo:
                 info(1, '%s: Directory changed during generating %s repo, please generate again.' % (self.dist.nick, self.name))
 
     def lock(self, action):
-        if op.dryrun:
+        if OPTIONS.dryrun:
             return True
         lockfile = path_join(CONFIG.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         mkdir(os.path.dirname(lockfile))
@@ -554,7 +554,7 @@ class Repo:
         return False
 
     def unlock(self, action):
-        if op.dryrun:
+        if OPTIONS.dryrun:
             return True
         lockfile = path_join(CONFIG.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         info(6, '%s: Removing lock %s' % (self.dist.nick, lockfile))
@@ -570,7 +570,7 @@ class Repo:
     def createmd(self):
         metadata = ('createrepo', 'repomd')
 
-        if not self.changed and not op.force:
+        if not self.changed and not OPTIONS.force:
             return
 
         try:
@@ -591,11 +591,11 @@ class Repo:
         groupfilename = 'comps.xml'
 
         opts = ' ' + CONFIG.createrepooptions
-        if op.force:
+        if OPTIONS.force:
             opts = ' --pretty' + opts
-        if op.verbose <= 2:
+        if OPTIONS.verbose <= 2:
             opts = ' --quiet' + opts
-        elif op.verbose >= 4:
+        elif OPTIONS.verbose >= 4:
             opts = ' -v' + opts
         if not self.dist.promoteepoch:
             opts = opts + ' -n'
@@ -648,19 +648,19 @@ def writesha1(filename, sha1sum=None):
     repodir = os.path.dirname(filename)
     if not sha1sum:
         sha1sum = sha1dir(repodir)
-    if not op.dryrun:
+    if not OPTIONS.dryrun:
         open(filename, 'w').write(sha1sum)
 
 
 def error(level, text):
     "Output error message"
-    if level <= op.verbose:
+    if level <= OPTIONS.verbose:
         sys.stderr.write('mrepo: %s\n' % text)
 
 
 def info(level, text):
     "Output info message"
-    if level <= op.verbose:
+    if level <= OPTIONS.verbose:
         sys.stdout.write('%s\n' % text)
 
 
@@ -673,9 +673,9 @@ def die(ret, text):
 def run(text, dryrun=False):
     "Run command, accept user input, and print output when needed."
     text = 'exec ' + text
-    if op.verbose <= 2:
+    if OPTIONS.verbose <= 2:
         text = text + ' >/dev/null'
-    if not op.dryrun or dryrun:
+    if not OPTIONS.dryrun or dryrun:
         info(5, 'Execute: %s' % text)
         return os.system(text)
     else:
@@ -692,7 +692,7 @@ def readfile(filename, size=0):
 
 
 def writefile(filename, text):
-    if op.dryrun:
+    if OPTIONS.dryrun:
         return
     file_object = open(filename, 'w')
     file_object.write(text)
@@ -768,7 +768,7 @@ def relpath(path, reference):
 
 def symlink(src, dst):
     "Create a symbolic link, force if dst exists"
-    if op.dryrun:
+    if OPTIONS.dryrun:
         return
     elif os.path.islink(dst):
         if os.path.samefile(src, abspath(os.readlink(dst), src)):
@@ -796,7 +796,7 @@ def symlink(src, dst):
 
 def copy(src, dst):
     "Copy a file, force if dst exists"
-    if op.dryrun:
+    if OPTIONS.dryrun:
         return
     if path_is_dir(dst):
         dst = path_join(dst, os.path.basename(src))
@@ -813,7 +813,7 @@ def copy(src, dst):
 def remove(filename):
     "Remove files or directories"
     if isinstance(filename, types.StringType):
-        if op.dryrun:
+        if OPTIONS.dryrun:
             return
         if os.path.islink(filename):
             os.unlink(filename)
@@ -837,7 +837,7 @@ def removedir(_, dir, files):
 
 def mkdir(path):
     "Create a directory, and parents if needed"
-    if op.dryrun:
+    if OPTIONS.dryrun:
         return
     if os.path.islink(path):
         os.unlink(path)
@@ -858,17 +858,17 @@ def mirrorrsync(url, path):
     mkdir(path)
 
     opts = CONFIG.rsyncoptions
-    if op.verbose <= 2:
+    if OPTIONS.verbose <= 2:
         opts = opts + ' -q'
-    elif op.verbose == 3:
+    elif OPTIONS.verbose == 3:
         opts = opts + ' -v'
-    elif op.verbose == 4:
+    elif OPTIONS.verbose == 4:
         opts = opts + ' -v --progress'
-    elif op.verbose == 5:
+    elif OPTIONS.verbose == 5:
         opts = opts + ' -vv --progress'
-    elif op.verbose >= 6:
+    elif OPTIONS.verbose >= 6:
         opts = opts + ' -vvv --progress'
-    if op.dryrun:
+    if OPTIONS.dryrun:
         opts = opts + ' --dry-run'
     if CONFIG.rsynctimeout:
         opts = opts + ' --timeout=%s' % CONFIG.rsynctimeout
@@ -915,13 +915,13 @@ def mirrorlftp(url, path, dist):
         cmds = cmds + ' set net:limit-total-rate %s:0;' % CONFIG.lftpbwlimit
 
     opts = CONFIG.lftpoptions
-    if op.verbose >= 6:
+    if OPTIONS.verbose >= 6:
         opts = opts + ' -d'
 
     mirroropts = CONFIG.lftpmirroroptions
-    if op.verbose >= 3:
-        mirroropts = mirroropts + ' -v' * (op.verbose - 2)
-    if op.dryrun:
+    if OPTIONS.verbose >= 3:
+        mirroropts = mirroropts + ' -v' * (OPTIONS.verbose - 2)
+    if OPTIONS.dryrun:
         mirroropts = mirroropts + ' --dry-run'
     if CONFIG.lftpcleanup:
         mirroropts = mirroropts + ' -e'
@@ -948,9 +948,9 @@ def mirrorreposync(url, path, reponame, dist):
     url = url.replace('reposyncf://', 'ftp://')
 
     opts = CONFIG.reposyncoptions
-    if op.verbose < 3:
+    if OPTIONS.verbose < 3:
         opts = opts + ' -q'
-    if op.dryrun:
+    if OPTIONS.dryrun:
         opts = opts + ' --urls'
     if CONFIG.reposynccleanup:
         opts = opts + ' --delete'
@@ -1140,11 +1140,11 @@ def main():
         os.environ['RSYNC_PROXY'] = CONFIG.RSYNC_PROXY
 
     ### Select list of distributions in order of appearance
-    if not op.dists:
+    if not OPTIONS.dists:
         dists = CONFIG.dists
     else:
         dists = []
-        for name in op.dists:
+        for name in OPTIONS.dists:
             append = False
             for dist in CONFIG.alldists:
                 if name == dist.nick or name == dist.dist:
@@ -1159,7 +1159,7 @@ def main():
 
     ### Mounting and mirroring available distributions/repositories
     for dist in dists:
-        if op.update:
+        if OPTIONS.update:
             msg = msg + '\n\nDist: %s (%s)' % (dist.name, dist.nick)
             info(1, '%s: Updating %s' % (dist.nick, dist.name))
 
@@ -1167,7 +1167,7 @@ def main():
             distremoved = 0
 
             ### Downloading things
-            for repo in dist.listrepos(op.repos):
+            for repo in dist.listrepos(OPTIONS.repos):
                 if not repo.lock('update'):
                     continue
                 if repo in dist.listrepos():
@@ -1226,7 +1226,7 @@ def main():
         subject = 'changes to %s (new: %d, removed: %d)' % (os.uname()[1], sumnew, sumremoved)
         mail(subject, msg)
 
-    if not op.generate:
+    if not OPTIONS.generate:
         sys.exit(0)
 
 
@@ -1245,7 +1245,7 @@ sys.stderr = os.fdopen(2, 'w', 0)
 if __name__ == '__main__':
     exitcode = 0
 
-    op = Options(sys.argv[1:])
+    OPTIONS = Options(sys.argv[1:])
     CONFIG = readconfig()
     try:
         main()

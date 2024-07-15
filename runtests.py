@@ -232,6 +232,5 @@ def _Testlinksync__touch(filename):
 
 
 if __name__ == '__main__':
-    # mrepo.op = mrepo.Options(('-vvvvv', '-c/dev/null'))
-    mrepo.op = mrepo.Options(('-c/dev/null')) # should really get rid of this!
+    mrepo.OPTIONS = mrepo.Options(('-c/dev/null')) # should really get rid of this!
     unittest.main()
