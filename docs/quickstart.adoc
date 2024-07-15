@@ -32,34 +32,7 @@ Do the following steps to get started (real) fast.
      See the examples in the documentation as a reference.
 
 
-  2. If you want to add your own custom packages to one or all of
-     the repositories, you have 2 options.
-
-     a. Add them to /var/mrepo/<distro>-<arch>/local/
-
-		eg. /var/mrepo/fc3-i386/local/
-
-	or add them to /var/mrepo/all/local/ to add them to all.
-
-     b. Specify the directory of your choice in a new repository,
-	eg. called 'myrepo'
-
-		[fc3-i386]
-		name = Fedora Core $release ($arch)
-		release = 3
-		.
-		.
-		myrepo = file:///var/ftp/pub/my-rpms/fc3/i386/
-
-	eg. you can rewrite this as:
-
-		myrepo = file:///var/ftp/pub/my-rpms/$dist/$arch/
-
-        This way you can specify an unlimited number of custom
-        repositories.
-
-
-  3. Now run mrepo to update the repositories:
+  2. Now run mrepo to update the repositories:
 
 	mrepo -uvv
 
@@ -71,7 +44,7 @@ Do the following steps to get started (real) fast.
      http://localhost/mrepo/ to see if everything is the way you wanted.
 
 
-  4. Next time you can do directly
+  3. Next time you can do directly
 
 	mrepo -ug
      or
@@ -80,7 +53,7 @@ Do the following steps to get started (real) fast.
      and all steps will be performed in one phase.
 
 
-  5. When you're adding new distributions, it's sufficient to just
+  4. When you're adding new distributions, it's sufficient to just
      run mrepo again.
 
 ---

@@ -364,15 +364,12 @@ class Dist:
             return self.repos
 
     def genmetadata(self):
-        allsrcdirs = []
         pathjoin = os.path.join
         for repo in self.listrepos(op.repos):
             if not repo.lock('generate'):
                 continue
 
-            self.linksync(repo, [repo.srcdir, repo.allsrcdir])
-            allsrcdirs.append(repo.srcdir)
-            allsrcdirs.append(repo.allsrcdir)
+            self.linksync(repo, [repo.srcdir])
 
             repo.check()
             repo.createmd()
@@ -386,8 +383,7 @@ class Dist:
             if not repo.lock('generate'):
                 continue
 
-            ### Link all srcdirs from other repositories
-            self.linksync(Repo('all', '', self, cf), allsrcdirs)
+            self.linksync(repo, [repo.srcdir])
 
             repo.check()
             repo.createmd()
@@ -462,7 +458,6 @@ class Repo:
         self.url = url
         self.dist = dist
         self.srcdir = os.path.join(cf.srcdir, dist.nick, self.name)
-        self.allsrcdir = os.path.join(cf.srcdir, 'all', self.name)
         self.wwwdir = os.path.join(dist.dir, 'RPMS.' + self.name)
 
         self.changed = False
