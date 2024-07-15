@@ -356,7 +356,6 @@ class Dist:
             repo.url = substitute(repo.url, varlist)
 
     def listrepos(self, names=None):
-        ret = []
         if names:
             return [repo for repo in self.repos if repo.name in names]
         else:
