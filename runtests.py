@@ -49,7 +49,7 @@ class TestSync(unittest.TestCase):
         onlyleft = []
         keyequal = []
         # key is the first element
-        for a, b in mrepo.synciter(left, right, key = lambda x: x[0]):
+        for a, b in mrepo.synciter(left, right, key=lambda x: x[0]):
             if a is None:
                 onlyright.append(b)
             elif b is None:
