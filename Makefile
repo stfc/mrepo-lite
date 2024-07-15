@@ -34,7 +34,7 @@ all:
 	@echo "There is nothing to be build. Try install !"
 
 install:
-	install -Dp -m0755 mrepo $(DESTDIR)$(bindir)/mrepo
+	install -Dp -m0755 mrepo.py $(DESTDIR)$(bindir)/mrepo
 	[ ! -f $(DESTDIR)$(sysconfdir)/mrepo.conf ] && install -D -m0600 config/mrepo.conf $(DESTDIR)$(sysconfdir)/mrepo.conf || :
 	install -d -m0755 $(DESTDIR)$(sysconfdir)/mrepo.conf.d/
 

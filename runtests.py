@@ -4,51 +4,11 @@ import os
 import sys
 
 import os.path
-testdir = os.path.abspath(os.path.dirname(__file__))
-parentdir = os.path.dirname(testdir)
-sys.path.insert(1, parentdir)
-
 import unittest
+from shutil import rmtree
+from tempfile import mkdtemp
+
 import mrepo
-from mrepo import mySet
-
-class TestmySet(unittest.TestCase):
-
-    def setUp(self):
-        self.s = mySet([1, 2, 3, 4])
-        
-    def test_initempty(self):
-        s = mySet()
-        self.assert_(isinstance(s, mrepo.mySet))
-
-    def test_init(self):
-        s = mySet([ 1, 2, 3, 4 ])
-        self.assert_(isinstance(s, mrepo.mySet))
-        self.assert_(repr(s) == 'mySet([1, 2, 3, 4])')
-
-    def test_add(self):
-        s = self.s
-        self.assert_(9 not in s)
-        s.add(9)
-        self.assert_(9 in s)
-
-    def test_eq(self):
-        s1 = mySet([1, 2, 3])
-        s2 = mySet([1, 2, 3])
-        self.assertEqual(s1, s2)
-
-    def test_difference(self):
-        s1 = mySet([ 1, 2, 3, 4 ])
-        s2 = mySet([ 1, 3 ])
-        s = s1.difference(s2)
-        self.assertEqual(s, mySet([2, 4]))
-
-    def test_iter(self):
-        s = mySet([1, 2, 3])
-        l = []
-        for i in s:
-            l.append(i)
-        self.assertEqual(l, [1, 2, 3])
 
 
 class TestSync(unittest.TestCase):
@@ -103,24 +63,23 @@ class TestSync(unittest.TestCase):
         self.assertEqual(keyequal, [((2, 'l2'), (2, 'r2')),
                                     ((5, 'l5'), (5, 'r5'))])
 
+
 class Testlinksync(unittest.TestCase):
     def setUp(self):
-        mkdir = os.mkdir
-        pj= os.path.join
-        self.tmpdir = tmpdir = pj(testdir, 'tmp')
+        pj = os.path.join
 
-        os.mkdir(tmpdir)
+        self.tmpdir = tmpdir = mkdtemp(prefix='mrepo_tests_')
 
         # global "op" is needed by mrepo.Config, horrible for testing!
-        
+
         class TestConfig:
             pass
-        
+
         self.cf = cf = TestConfig()
 
         cf.srcdir = pj(tmpdir, 'src')
         cf.wwwdir = pj(tmpdir, 'dst')
-       
+
         self.dist = mrepo.Dist('testdist', 'i386', cf)
         self.repo = repo = mrepo.Repo('testrepo', '', self.dist, cf)
         srcdir = repo.srcdir
@@ -135,7 +94,7 @@ class Testlinksync(unittest.TestCase):
         for f in xrange(4):
             __touch(pj(srcdir, str(f) + '.rpm'))
         __touch(pj(srcdir, 'dontsync.txt'))
-                
+
         os.mkdir(pj(srcdir, 'a'))
         __touch(pj(srcdir, 'a', '2.rpm'))
         __touch(pj(srcdir, 'a', 'a.rpm'))
@@ -156,36 +115,22 @@ class Testlinksync(unittest.TestCase):
             ]
         self.links.sort()
 
-        
     def tearDown(self):
-        isdir = os.path.isdir
-        walk = os.path.walk
-        pathjoin= os.path.join
         tmpdir = self.tmpdir
+
         # for safety-reasons:
-        if tmpdir.count('/') < 3:
-            raise "Will not remove tmpdir %s" % ( tmpdir, )
+        if tmpdir.count('/') < 2:
+            raise Exception("Will not remove tmpdir %s" % ( tmpdir, ))
 
-        def rmfile(arg, path, files):
-            for file in files:
-                # print "%s" % ( file, )
-                f = pathjoin(path, file)
-                if isdir(f):
-                    walk(f, rmfile, None)
-                    #print "rmdir %s" % ( f, )
-                    os.rmdir(f)
-                else:
-                    #print "unlink %s" % ( f, )
-                    os.unlink(f)
-
-        os.path.walk(tmpdir, rmfile, None)
-        os.rmdir(tmpdir)
+        rmtree(tmpdir)
 
     def readlinks(self, dir):
         """return a list of (linkname, linktarget) tuples for all files in a directory"""
         pj = os.path.join
         readlink = os.readlink
-        return [ (l, readlink(pj(dir, l))) for l in os.listdir(dir) ]
+        result = [ (l, readlink(pj(dir, l))) for l in os.listdir(dir) ]
+        result.sort()
+        return result
 
     def genlinks(self, links, dir=''):
         if not dir:
@@ -246,7 +191,6 @@ class Testlinksync(unittest.TestCase):
 
         actual = self.readlinks(repo.wwwdir)
         target = self.links
-        actual.sort()
         self.assertEqual(actual, target)
 
     def test_linksync_additional(self):
@@ -263,7 +207,6 @@ class Testlinksync(unittest.TestCase):
         self.dist.linksync(repo)
 
         actual = self.readlinks(repo.wwwdir)
-        actual.sort()
         target = self.links
         self.assertEqual(actual, target)
 
@@ -273,7 +216,7 @@ class Testlinksync(unittest.TestCase):
 
         pj = os.path.join
         # add some links
-        
+
         # basename != target basename
         links[1] = (links[1][0], pj(self.linkbase, 'illegal.rpm'))
         # different dir
@@ -286,7 +229,6 @@ class Testlinksync(unittest.TestCase):
         self.dist.linksync(repo)
 
         actual = self.readlinks(repo.wwwdir)
-        actual.sort()
         target = self.links
         self.assertEqual(actual, target)
 
