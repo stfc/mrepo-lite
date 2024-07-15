@@ -4,11 +4,10 @@ import os
 import sys
 
 import os.path
-testdir = os.path.abspath(os.path.dirname(__file__))
-parentdir = os.path.dirname(testdir)
-sys.path.insert(1, parentdir)
-
 import unittest
+from shutil import rmtree
+from tempfile import mkdtemp
+
 import mrepo
 
 
@@ -64,13 +63,12 @@ class TestSync(unittest.TestCase):
         self.assertEqual(keyequal, [((2, 'l2'), (2, 'r2')),
                                     ((5, 'l5'), (5, 'r5'))])
 
+
 class Testlinksync(unittest.TestCase):
     def setUp(self):
-        mkdir = os.mkdir
-        pj= os.path.join
-        self.tmpdir = tmpdir = pj(testdir, 'tmp')
+        pj = os.path.join
 
-        os.mkdir(tmpdir)
+        self.tmpdir = tmpdir = mkdtemp(prefix='mrepo_tests_')
 
         # global "op" is needed by mrepo.Config, horrible for testing!
 
@@ -117,30 +115,14 @@ class Testlinksync(unittest.TestCase):
             ]
         self.links.sort()
 
-
     def tearDown(self):
-        isdir = os.path.isdir
-        walk = os.path.walk
-        pathjoin= os.path.join
         tmpdir = self.tmpdir
+
         # for safety-reasons:
-        if tmpdir.count('/') < 3:
-            raise "Will not remove tmpdir %s" % ( tmpdir, )
+        if tmpdir.count('/') < 2:
+            raise Exception("Will not remove tmpdir %s" % ( tmpdir, ))
 
-        def rmfile(arg, path, files):
-            for file in files:
-                # print "%s" % ( file, )
-                f = pathjoin(path, file)
-                if isdir(f):
-                    walk(f, rmfile, None)
-                    #print "rmdir %s" % ( f, )
-                    os.rmdir(f)
-                else:
-                    #print "unlink %s" % ( f, )
-                    os.unlink(f)
-
-        os.path.walk(tmpdir, rmfile, None)
-        os.rmdir(tmpdir)
+        rmtree(tmpdir)
 
     def readlinks(self, dir):
         """return a list of (linkname, linktarget) tuples for all files in a directory"""
