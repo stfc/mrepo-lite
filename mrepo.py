@@ -964,15 +964,15 @@ def mirrorreposync(url, path, reponame, dist):
     reposync_conf_contents += "baseurl=%s\n" % url
     reposync_conf_contents += "enabled=1\n"
     if dist.sslca:
-    	reposync_conf_contents += "sslcacert=%s\n" % dist.sslca
+        reposync_conf_contents += "sslcacert=%s\n" % dist.sslca
     if dist.sslcert:
-    	reposync_conf_contents += "sslclientcert=%s\n" % dist.sslcert
+        reposync_conf_contents += "sslclientcert=%s\n" % dist.sslcert
     if dist.sslkey:
-    	reposync_conf_contents += "sslclientkey=%s\n" % dist.sslkey
+        reposync_conf_contents += "sslclientkey=%s\n" % dist.sslkey
     if cf.reposynctimeout:
-    	reposync_conf_contents += "timeout=%s\n" % cf.reposynctimeout
+        reposync_conf_contents += "timeout=%s\n" % cf.reposynctimeout
     if cf.reposyncminrate:
-    	reposync_conf_contents += "minrate=%s\n" % cf.reposyncminrate
+        reposync_conf_contents += "minrate=%s\n" % cf.reposyncminrate
 
 
     (fd, reposync_conf_file) = tempfile.mkstemp(text=True)
