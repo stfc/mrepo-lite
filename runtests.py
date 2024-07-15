@@ -125,7 +125,7 @@ class Testlinksync(unittest.TestCase):
         """return a list of (linkname, linktarget) tuples for all files in a directory"""
         pj = os.path.join
         readlink = os.readlink
-        result = [ (l, readlink(pj(directory, l))) for l in os.listdir(directory) ]
+        result = [(l, readlink(pj(directory, l))) for l in os.listdir(directory)]
         result.sort()
         return result
 
