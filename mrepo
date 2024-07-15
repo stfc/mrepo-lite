@@ -176,7 +176,7 @@ class Config:
         self.smtpserver = self.getoption('main', 'smtp-server', 'localhost')
 
         self.arch = self.getoption('main', 'arch', 'i386')
-        self.metadata = self.getoption('main', 'metadata', 'repomd repoview')
+        self.metadata = self.getoption('main', 'metadata', 'repomd')
 
         self.quiet = self.getoption('main', 'quiet', 'no') not in disable
         if op.verbose == 1 and self.quiet:
@@ -191,7 +191,6 @@ class Config:
         self.cmd = {}
         self.cmd['createrepo'] = self.getoption('main', 'createrepocmd', '/usr/bin/createrepo')
         self.cmd['lftp'] = self.getoption('main', 'lftpcmd', '/usr/bin/lftp')
-        self.cmd['repoview'] = self.getoption('main', 'repoviewcmd', '/usr/bin/repoview')
         self.cmd['reposync'] = self.getoption('main', 'reposynccmd', '/usr/bin/reposync')
         self.cmd['rsync'] = self.getoption('main', 'rsynccmd', '/usr/bin/rsync')
 
@@ -222,8 +221,6 @@ class Config:
         self.rsyncexclsrpm = self.getoption('main', 'rsync-exclude-srpm', 'yes') not in disable
         self.rsyncoptions = self.getoption('main', 'rsync-options', '-rtHL --partial')
         self.rsynctimeout = self.getoption('main', 'rsync-timeout', None)
-
-        self.repoviewoptions = self.getoption('main', 'repoview-options', '')
 
         self.alldists = []
         self.dists = []
@@ -601,8 +598,7 @@ class Repo:
             error(0, '%s: Lockfile %s does not exist. Cannot unlock. Something fishy here ?' % (self.dist.nick, lockfile))
 
     def createmd(self):
-        metadata = ('createrepo', 'repomd', 'repoview')
-        index = ('repoview',)
+        metadata = ('createrepo', 'repomd')
 
         if not self.changed and not op.force:
             return
@@ -612,15 +608,7 @@ class Repo:
             for md in self.dist.metadata:
                 if md in ('createrepo', 'repomd'):
                     self.repomd()
-                elif md not in index:
-                    error(0, 'The %s metadata is unknown.' % md)
 
-            ### Generate repository index
-            for md in self.dist.metadata:
-                if md in ('repoview',):
-                    self.repoview()
-                elif md not in metadata:
-                    error(0, 'The %s index is unknown.' % md)
         except mrepoGenerateException, e:
             error(0, 'Generating repo failed for %s with message:\n  %s' % (self.name, e.value))
             exitcode = 2
@@ -657,25 +645,6 @@ class Repo:
             ret = run('%s %s %s' % (cf.cmd['createrepo'], repoopts, self.wwwdir))
             if ret:
                 raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['createrepo'], ret)))
-
-
-    def repoview(self):
-        "Create a repoview index"
-        if not self.changed and not op.force:
-            return
-        if not cf.cmd['repoview']:
-            return
-        opts = ''
-        if op.force:
-            opts = ' --force'
-        if op.verbose <= 2:
-            opts = ' --quiet' + opts
-        if os.path.exists(self.wwwdir):
-            info(2, '%s: Create Repoview index for %s' % (self.dist.nick, self.name))
-            title = '%s repository for %s' % (self.name, self.dist.nick)
-            ret = run('%s %s --title="%s" %s' % (cf.cmd['repoview'], opts, title, self.wwwdir))
-            if ret:
-                raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['repoview'], ret)))
 
 
 class mrepoMirrorException(Exception):

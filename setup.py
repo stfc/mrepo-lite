@@ -68,7 +68,7 @@ distributions from a laptop without the need for CD media or floppies, but
 is equally suitable for an organization's centralized update server.
 
 Depending on the use it may require:
-    apt, yum, dnf, createrepo, repoview
+    apt, yum, dnf, createrepo
 ''',
 )
 
