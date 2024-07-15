@@ -17,12 +17,8 @@ class TestSync(unittest.TestCase):
     def setUp(self):
         pass
     def test_synciter1(self):
-        left = (
-            1, 2, 4, 5
-            )
-        right = (
-            2, 3, 5, 6, 7
-            )
+        left = (1, 2, 4, 5)
+        right = (2, 3, 5, 6, 7)
 
         onlyright = []
         onlyleft = []
@@ -42,10 +38,10 @@ class TestSync(unittest.TestCase):
     def test_synciter2(self):
         left = (
             (1, 'l1'), (2, 'l2'), (4, 'l4'), (5, 'l5')
-            )
+        )
         right = (
             (2, 'r2'), (3, 'r3'), (5, 'r5'), (6, 'r6'), (7, 'r7')
-            )
+        )
 
         onlyright = []
         onlyleft = []
@@ -61,8 +57,7 @@ class TestSync(unittest.TestCase):
 
         self.assertEqual(onlyright, [(3, 'r3'), (6, 'r6'), (7, 'r7')])
         self.assertEqual(onlyleft, [(1, 'l1'), (4, 'l4')])
-        self.assertEqual(keyequal, [((2, 'l2'), (2, 'r2')),
-                                    ((5, 'l5'), (5, 'r5'))])
+        self.assertEqual(keyequal, [((2, 'l2'), (2, 'r2')), ((5, 'l5'), (5, 'r5'))])
 
 
 class Testlinksync(unittest.TestCase):
@@ -108,7 +103,7 @@ class Testlinksync(unittest.TestCase):
             ('1.rpm', path_join(linkbase, '1.rpm')),
             ('2.rpm', path_join(linkbase, '2.rpm')),
             ('3.rpm', path_join(linkbase, '3.rpm')),
-            ('a.rpm', path_join(linkbase, 'a', 'a.rpm'))
+            ('a.rpm', path_join(linkbase, 'a', 'a.rpm')),
         ]
         self.links.sort()
 
