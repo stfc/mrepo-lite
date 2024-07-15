@@ -318,7 +318,6 @@ class Config:
         except ConfigParser.NoSectionError, e:
             error(5, 'Failed to find section [%s]' % section)
         except ConfigParser.NoOptionError, e:
-#           error(4, 'Failed to find option %s in [%s], set to default: %s' % (option, section, var))
             info(5, 'Setting option %s in section [%s] to: %s (default)' % (option, section, var))
         return var
 
@@ -1008,7 +1007,6 @@ def mail(subject, msg):
     try:
         import smtplib
         smtp = smtplib.SMTP(cf.smtpserver)
-#       server.set_debuglevel(1)
         msg = 'Subject: [mrepo] %s\nX-Mailer: mrepo %s\n\n%s' % (subject, VERSION, msg)
         for email in cf.mailto.split():
             smtp.sendmail(cf.mailfrom, email, 'To: %s\n%s' % (email, msg))
