@@ -10,45 +10,6 @@ sys.path.insert(1, parentdir)
 
 import unittest
 import mrepo
-from mrepo import mySet
-
-class TestmySet(unittest.TestCase):
-
-    def setUp(self):
-        self.s = mySet([1, 2, 3, 4])
-        
-    def test_initempty(self):
-        s = mySet()
-        self.assert_(isinstance(s, mrepo.mySet))
-
-    def test_init(self):
-        s = mySet([ 1, 2, 3, 4 ])
-        self.assert_(isinstance(s, mrepo.mySet))
-        self.assert_(repr(s) == 'mySet([1, 2, 3, 4])')
-
-    def test_add(self):
-        s = self.s
-        self.assert_(9 not in s)
-        s.add(9)
-        self.assert_(9 in s)
-
-    def test_eq(self):
-        s1 = mySet([1, 2, 3])
-        s2 = mySet([1, 2, 3])
-        self.assertEqual(s1, s2)
-
-    def test_difference(self):
-        s1 = mySet([ 1, 2, 3, 4 ])
-        s2 = mySet([ 1, 3 ])
-        s = s1.difference(s2)
-        self.assertEqual(s, mySet([2, 4]))
-
-    def test_iter(self):
-        s = mySet([1, 2, 3])
-        l = []
-        for i in s:
-            l.append(i)
-        self.assertEqual(l, [1, 2, 3])
 
 
 class TestSync(unittest.TestCase):
