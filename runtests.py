@@ -4,6 +4,8 @@ import os
 import sys
 
 import os.path
+from os.path import join as path_join
+
 import unittest
 from shutil import rmtree
 from tempfile import mkdtemp
@@ -65,8 +67,6 @@ class TestSync(unittest.TestCase):
 
 class Testlinksync(unittest.TestCase):
     def setUp(self):
-        pj = os.path.join
-
         self.tmpdir = tmpdir = mkdtemp(prefix='mrepo_tests_')
 
         class TestConfig:
@@ -74,8 +74,8 @@ class Testlinksync(unittest.TestCase):
 
         self.cf = cf = TestConfig()
 
-        cf.srcdir = pj(tmpdir, 'src')
-        cf.wwwdir = pj(tmpdir, 'dst')
+        cf.srcdir = path_join(tmpdir, 'src')
+        cf.wwwdir = path_join(tmpdir, 'dst')
 
         self.dist = mrepo.Dist('testdist', 'i386', cf)
         self.repo = repo = mrepo.Repo('testrepo', '', self.dist, cf)
@@ -89,27 +89,27 @@ class Testlinksync(unittest.TestCase):
         os.makedirs(repo.wwwdir)
 
         for f in xrange(4):
-            __touch(pj(srcdir, str(f) + '.rpm'))
-        __touch(pj(srcdir, 'dontsync.txt'))
+            __touch(path_join(srcdir, str(f) + '.rpm'))
+        __touch(path_join(srcdir, 'dontsync.txt'))
 
-        os.mkdir(pj(srcdir, 'a'))
-        __touch(pj(srcdir, 'a', '2.rpm'))
-        __touch(pj(srcdir, 'a', 'a.rpm'))
+        os.mkdir(path_join(srcdir, 'a'))
+        __touch(path_join(srcdir, 'a', '2.rpm'))
+        __touch(path_join(srcdir, 'a', 'a.rpm'))
 
-        self.localdir = localdir = pj(cf.srcdir, 'testdist-i386', 'local')
+        self.localdir = localdir = path_join(cf.srcdir, 'testdist-i386', 'local')
         os.makedirs(localdir)
         for f in ('local.rpm', 'dont_sync2.txt'):
-            __touch(pj(localdir, f))
+            __touch(path_join(localdir, f))
 
         # this should be the result when linksync'ing srcdir
         self.linkbase = linkbase = '../../../src/testdist-i386/testrepo'
         self.links = [
-            ('0.rpm', pj(linkbase, '0.rpm')),
-            ('1.rpm', pj(linkbase, '1.rpm')),
-            ('2.rpm', pj(linkbase, '2.rpm')),
-            ('3.rpm', pj(linkbase, '3.rpm')),
-            ('a.rpm', pj(linkbase, 'a', 'a.rpm'))
-            ]
+            ('0.rpm', path_join(linkbase, '0.rpm')),
+            ('1.rpm', path_join(linkbase, '1.rpm')),
+            ('2.rpm', path_join(linkbase, '2.rpm')),
+            ('3.rpm', path_join(linkbase, '3.rpm')),
+            ('a.rpm', path_join(linkbase, 'a', 'a.rpm'))
+        ]
         self.links.sort()
 
     def tearDown(self):
@@ -123,9 +123,8 @@ class Testlinksync(unittest.TestCase):
 
     def readlinks(self, directory):
         """return a list of (linkname, linktarget) tuples for all files in a directory"""
-        pj = os.path.join
         readlink = os.readlink
-        result = [(l, readlink(pj(directory, l))) for l in os.listdir(directory)]
+        result = [(l, readlink(path_join(directory, l))) for l in os.listdir(directory)]
         result.sort()
         return result
 
@@ -135,35 +134,33 @@ class Testlinksync(unittest.TestCase):
         pj = os.path.join
         symlink = os.symlink
         for name, target in links:
-            symlink(target, pj(directory, name))
+            symlink(target, path_join(directory, name))
 
     def test_listrpms(self):
         srcdir = self.repo.srcdir
         actual = mrepo.listrpms(srcdir)
-        pj= os.path.join
         target = [
             ('0.rpm', srcdir),
             ('1.rpm', srcdir),
             ('2.rpm', srcdir),
-            ('2.rpm', pj(srcdir, 'a')),
+            ('2.rpm', path_join(srcdir, 'a')),
             ('3.rpm', srcdir),
-            ('a.rpm', pj(srcdir, 'a')),
-            ]
+            ('a.rpm', path_join(srcdir, 'a')),
+        ]
         self.assertEqual(actual, target)
 
     def test_listrpms_rel(self):
         srcdir = self.repo.srcdir
         linkbase = self.linkbase
         actual = mrepo.listrpms(srcdir, relative = self.repo.wwwdir)
-        pj= os.path.join
         target = [
             ('0.rpm', linkbase),
             ('1.rpm', linkbase),
             ('2.rpm', linkbase),
-            ('2.rpm', pj(linkbase, 'a')),
+            ('2.rpm', path_join(linkbase, 'a')),
             ('3.rpm', linkbase),
-            ('a.rpm', pj(linkbase, 'a')),
-            ]
+            ('a.rpm', path_join(linkbase, 'a')),
+        ]
         self.assertEqual(actual, target)
 
     def test_linksync_new(self):
@@ -194,11 +191,10 @@ class Testlinksync(unittest.TestCase):
         repo = self.repo
         links = self.links[:]
 
-        pj = os.path.join
         # add some links
-        links.insert(0, ('new1.rpm', pj(self.linkbase, 'new1.rpm')))
-        links.insert(2, ('new2.rpm', pj(self.linkbase, 'new2.rpm')))
-        links.append(('new3.rpm', pj(self.linkbase, 'new3.rpm')))
+        links.insert(0, ('new1.rpm', path_join(self.linkbase, 'new1.rpm')))
+        links.insert(2, ('new2.rpm', path_join(self.linkbase, 'new2.rpm')))
+        links.append(('new3.rpm', path_join(self.linkbase, 'new3.rpm')))
         self.genlinks(links)
 
         self.dist.linksync(repo)
@@ -211,15 +207,14 @@ class Testlinksync(unittest.TestCase):
         repo = self.repo
         links = self.links[:]
 
-        pj = os.path.join
         # add some links
 
         # basename != target basename
-        links[1] = (links[1][0], pj(self.linkbase, 'illegal.rpm'))
+        links[1] = (links[1][0], path_join(self.linkbase, 'illegal.rpm'))
         # different dir
-        links[2] = (links[2][0], pj(self.linkbase, 'illegaldir', links[2][0]))
+        links[2] = (links[2][0], path_join(self.linkbase, 'illegaldir', links[2][0]))
         # correct, but absolute link
-        links[3] = (links[3][0], pj(repo.srcdir, links[3][0]))
+        links[3] = (links[3][0], path_join(repo.srcdir, links[3][0]))
 
         self.genlinks(links)
 
