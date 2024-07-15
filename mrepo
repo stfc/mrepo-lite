@@ -1056,24 +1056,6 @@ def mirrorreposync(url, path, reponame, dist):
         raise(mrepoMirrorException('Failed with return code: %s' % ret))
 
 
-def rpmlink((dist, repo), dirpath, filelist):
-    archlist = ['noarch', ]
-    if archs.has_key(dist.arch):
-        archlist.extend(archs[dist.arch])
-    else:
-        archlist.append(dist.arch)
-    for arch in archlist:
-        regexp = re.compile('.+[\._-]' + arch + '\.rpm$')
-        for file in filelist:
-            src = os.path.join(dirpath, file)
-            if os.path.islink(src) and os.path.isdir(src):
-                os.path.walk(src, rpmlink, (dist, repo))
-            elif regexp.match(file, 1):
-                symlink(src, os.path.join(dist.dir, 'RPMS.' + repo))
-                if op.create_aggregate_repos:
-                    symlink(src, os.path.join(dist.dir, 'RPMS.all'))
-
-
 def which(cmd):
     "Find executables in PATH environment"
     for path in os.environ.get('PATH', '$PATH').split(':'):
