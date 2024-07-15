@@ -112,15 +112,15 @@ class Testlinksync(unittest.TestCase):
         os.mkdir(tmpdir)
 
         # global "op" is needed by mrepo.Config, horrible for testing!
-        
+
         class TestConfig:
             pass
-        
+
         self.cf = cf = TestConfig()
 
         cf.srcdir = pj(tmpdir, 'src')
         cf.wwwdir = pj(tmpdir, 'dst')
-       
+
         self.dist = mrepo.Dist('testdist', 'i386', cf)
         self.repo = repo = mrepo.Repo('testrepo', '', self.dist, cf)
         srcdir = repo.srcdir
@@ -135,7 +135,7 @@ class Testlinksync(unittest.TestCase):
         for f in xrange(4):
             __touch(pj(srcdir, str(f) + '.rpm'))
         __touch(pj(srcdir, 'dontsync.txt'))
-                
+
         os.mkdir(pj(srcdir, 'a'))
         __touch(pj(srcdir, 'a', '2.rpm'))
         __touch(pj(srcdir, 'a', 'a.rpm'))
@@ -156,7 +156,7 @@ class Testlinksync(unittest.TestCase):
             ]
         self.links.sort()
 
-        
+
     def tearDown(self):
         isdir = os.path.isdir
         walk = os.path.walk
@@ -273,7 +273,7 @@ class Testlinksync(unittest.TestCase):
 
         pj = os.path.join
         # add some links
-        
+
         # basename != target basename
         links[1] = (links[1][0], pj(self.linkbase, 'illegal.rpm'))
         # different dir
