@@ -40,11 +40,5 @@ This is a trimmed down version of Dag Wieers original TODO list.
 ### Bugs
 + Correct file permissions/ownerships of packages in /var/mrepo (add umask option)
 
-### mrepocfg tool / generate a configuration for clients (Chandan Dutta Chowdhury)
-+ The tool should accept a URL as an argument
-+ Should have a list (-l) option to list the different distributions
-+ Should have a target (-t) option to specify the configuration output format (apt/yum/smart)
-+ It scans the URL given and looks for know repository metadata
-
 ### mrepousb tool
 + Create a bootable USB stick and allow for 3rd party boot-images
