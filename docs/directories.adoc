@@ -22,7 +22,6 @@ Web directory
 wwwdir = /var/www/mrepo
 
 	$dist/
-		RPMS.all/	- Contains all existing RPM packages
 		RPMS.$repo/	- Contains repo RPM packages
 		
 

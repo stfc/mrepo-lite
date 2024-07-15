@@ -378,20 +378,6 @@ class Dist:
             repo.writesha1()
             repo.unlock('generate')
 
-        # Finally generate 'all' repsitory
-        for repo in (Repo('all', '', self, cf),):
-            if not repo.lock('generate'):
-                continue
-
-            self.linksync(repo, [repo.srcdir])
-
-            repo.check()
-            repo.createmd()
-
-            ### After generation, write a sha1sum
-            repo.writesha1()
-            repo.unlock('generate')
-
     def linksync(self, repo, srcdirs=None):
         if not srcdirs:
             srcdirs = [repo.srcdir]
@@ -472,10 +458,6 @@ class Repo:
         "Check URL and pass on to mirror-functions."
         global exitcode
 
-        ### Do not mirror for repository 'all'
-        if self.name == 'all':
-            return
-
         ### Make a snapshot of the directory
         self.oldlist = self.rpmlist()
         self.newlist = self.oldlist
@@ -541,7 +523,6 @@ class Repo:
 
     def writesha1(self):
         "Verify .newsha1sum and write a .sha1sum file per repository"
-        ### FIXME: Repository 'all' got lost when introducing Repo class
         sha1file = os.path.join(self.wwwdir, '.sha1sum')
         if os.path.isfile(sha1file + '.tmp'):
             cursha1 = sha1dir(self.wwwdir)
