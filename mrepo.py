@@ -56,6 +56,8 @@ VARIABLES = {}
 
 DISABLE = ('no', 'off', 'false', '0')
 
+EXITCODE = 0
+
 
 class Options:
     def __init__(self, args):
@@ -450,7 +452,7 @@ class Repo:
 
     def mirror(self):
         "Check URL and pass on to mirror-functions."
-        global exitcode
+        global EXITCODE
 
         ### Make a snapshot of the directory
         self.oldlist = self.rpmlist()
@@ -568,6 +570,7 @@ class Repo:
             error(0, '%s: Lockfile %s does not exist. Cannot unlock. Something fishy here ?' % (self.dist.nick, lockfile))
 
     def createmd(self):
+        global EXITCODE
         metadata = ('createrepo', 'repomd')
 
         if not self.changed and not OPTIONS.force:
@@ -581,7 +584,7 @@ class Repo:
 
         except MrepoGenerateException as instance:
             error(0, 'Generating repo failed for %s with message:\n  %s' % (self.name, instance.value))
-            exitcode = 2
+            EXITCODE = 2
 
     def repomd(self):
         "Create a repomd repository"
@@ -1243,14 +1246,12 @@ sys.stderr = os.fdopen(2, 'w', 0)
 
 ### Main entrance
 if __name__ == '__main__':
-    exitcode = 0
-
     OPTIONS = Options(sys.argv[1:])
     CONFIG = readconfig()
     try:
         main()
     except KeyboardInterrupt:
         die(6, 'Exiting on user request')
-    sys.exit(exitcode)
+    sys.exit(EXITCODE)
 
 # vim:ts=4:sw=4:et
