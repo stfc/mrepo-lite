@@ -400,7 +400,7 @@ class Dist:
         for srcfile, destfile in synciter(srcfiles, destfiles, key=keyfunc):
             if srcfile is None:
                 # delete the link
-                base, targetdir = destfile
+                base, _ = destfile
                 linkname = path_join(destdir, base)
                 info(5, 'Remove link: %s' % (linkname,))
                 if not op.dryrun:
@@ -418,7 +418,7 @@ class Dist:
             else:
                 # same bases
                 base, srcdir = srcfile
-                base2, curtarget = destfile
+                _, curtarget = destfile
                 target = path_join(srcdir, base)
                 if target != curtarget:
                     info(5, 'Changed link %s: current: %s, should be: %s' % (base, curtarget, target))
@@ -459,18 +459,18 @@ class Repo:
         for url in self.url.split():
             try:
                 info(2, '%s: Mirror packages from %s to %s' % (self.dist.nick, url, self.srcdir))
-                s, l, p, q, f, o = urlparse.urlparse(url)
-                if s not in op.types:
-                    info(4, 'Ignoring mirror action for type %s' % s)
+                scheme = urlparse.urlparse(url)[0]
+                if scheme not in op.types:
+                    info(4, 'Ignoring mirror action for type %s' % scheme)
                     continue
-                if s in ('rsync', ):
+                if scheme in ('rsync', ):
                     mirrorrsync(url, self.srcdir)
-                elif s in ('ftp', 'fish', 'http', 'https', 'sftp'):
+                elif scheme in ('ftp', 'fish', 'http', 'https', 'sftp'):
                     mirrorlftp(url, self.srcdir, self.dist)
-                elif s in ('reposync', 'reposyncs', 'reposyncf'):
+                elif scheme in ('reposync', 'reposyncs', 'reposyncf'):
                     mirrorreposync(url, self.srcdir, '%s-%s' % (self.dist.nick, self.name), self.dist)
                 else:
-                    error(2, 'Scheme %s:// not implemented yet (in %s)' % (s, url))
+                    error(2, 'Scheme %s:// not implemented yet (in %s)' % (scheme, url))
             except MrepoMirrorException as instance:
                 error(0, 'Mirroring failed for %s with message:\n  %s' % (url, instance.value))
                 EXITCODE = 2
@@ -534,10 +534,10 @@ class Repo:
         lockfile = path_join(cf.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         mkdir(os.path.dirname(lockfile))
         try:
-            fd = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0600)
+            file_object = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0600)
             info(6, '%s: Setting lock %s' % (self.dist.nick, lockfile))
-            os.write(fd, '%d' % os.getpid())
-            os.close(fd)
+            os.write(file_object, '%d' % os.getpid())
+            os.close(file_object)
             return True
         except:
             if path_exists(lockfile):
@@ -575,8 +575,8 @@ class Repo:
 
         try:
             ### Generate repository metadata
-            for md in self.dist.metadata:
-                if md in ('createrepo', 'repomd'):
+            for metadata in self.dist.metadata:
+                if metadata in ('createrepo', 'repomd'):
                     self.repomd()
 
         except MrepoGenerateException as instance:
@@ -694,9 +694,9 @@ def readfile(filename, size=0):
 def writefile(filename, text):
     if op.dryrun:
         return
-    fd = open(filename, 'w')
-    fd.write(text)
-    fd.close()
+    file_object = open(filename, 'w')
+    file_object.write(text)
+    file_object.close()
 
 _subst_sub = re.compile('\$\{?(\w+)\}?').sub
 
@@ -755,10 +755,10 @@ def relpath(path, reference):
        if reference is a directory, it must end with a /"""
     common = os.path.commonprefix([path, reference])
     common = common[0:common.rfind('/') + 1]
-    (uncommon, targetName) = os.path.split(reference.replace(common, '', 1))
+    (uncommon, _) = os.path.split(reference.replace(common, '', 1))
     if uncommon:
         newpath = []
-        for component in uncommon.split('/'):
+        for _ in uncommon.split('/'):
             newpath.append('..')
         newpath.append(path.replace(common, '', 1))
         return '/'.join(newpath)
@@ -826,8 +826,8 @@ def remove(filename):
         elif os.path.isfile(filename) or os.path.islink(filename):
             os.unlink(filename)
     else:
-        for f in filename:
-            remove(f)
+        for name in filename:
+            remove(name)
 
 
 def removedir(_, dir, files):
@@ -976,8 +976,8 @@ def mirrorreposync(url, path, reponame, dist):
         reposync_conf_contents += "minrate=%s\n" % cf.reposyncminrate
 
 
-    (fd, reposync_conf_file) = tempfile.mkstemp(text=True)
-    handle = os.fdopen(fd, 'w')
+    (file_object, reposync_conf_file) = tempfile.mkstemp(text=True)
+    handle = os.fdopen(file_object, 'w')
     handle.writelines(reposync_conf_contents)
     handle.close()
 
@@ -1186,13 +1186,13 @@ def main():
                 if new or removed:
                     msg = msg + '\n\n\tRepo: %s' % repo.name
                     info(2, '%s: Repository %s changed (new: %d, removed: %d)' % (dist.nick, repo.name, len(new), len(removed)))
-                    fd = open(cf.logfile, 'a+')
+                    file_object = open(cf.logfile, 'a+')
                     date = time.strftime("%b %d %H:%M:%S", time.gmtime())
 
                     def sortedlist(pkgs):
-                        l = list(pkgs)
-                        l.sort()
-                        return l
+                        result = list(pkgs)
+                        result.sort()
+                        return result
 
                     def formatlist(pkglist):
                         return '\n\t' + '\n\t'.join([elem[0] for elem in pkglist])
@@ -1202,7 +1202,7 @@ def main():
                         info(4, '%s: New packages: %s' % (dist.nick, formatlist(pkglist)))
                         distnew += len(pkglist)
                         for element in pkglist:
-                            fd.write('%s %s/%s Added %s (%d kiB)\n' % (date, dist.nick, repo.name, element[0], element[1] / 1024))
+                            file_object.write('%s %s/%s Added %s (%d kiB)\n' % (date, dist.nick, repo.name, element[0], element[1] / 1024))
                             msg = msg + '\n\t\t+ %s (%d kiB)' % (element[0], element[1] / 1024)
 
                     if removed:
@@ -1210,10 +1210,10 @@ def main():
                         info(4, '%s: Removed packages: %s' % (dist.nick, formatlist(pkglist)))
                         distremoved += len(pkglist)
                         for element in pkglist:
-                            fd.write('%s %s/%s Removed %s (%d kiB)\n' % (date, dist.nick, repo.name, element[0], element[1] / 1024))
+                            file_object.write('%s %s/%s Removed %s (%d kiB)\n' % (date, dist.nick, repo.name, element[0], element[1] / 1024))
                             msg = msg + '\n\t\t- %s (%d kiB)' % (element[0], element[1] / 1024)
 
-                    fd.close()
+                    file_object.close()
                     repo.changed = True
 
             if distnew or distremoved:
