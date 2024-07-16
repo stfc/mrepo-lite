@@ -71,8 +71,8 @@ class Options:
             opts, args = getopt.getopt(args, 'c:d:fghnqr:t:uvx',
                 ('config=', 'dist=', 'dry-run', 'force', 'generate', 'help', 'quiet', 'repo=',
                  'type=', 'update', 'verbose', 'version', 'extras'))
-        except getopt.error, exc:
-            print 'mrepo: %s, try mrepo -h for a list of all the options' % str(exc)
+        except getopt.error, instance:
+            print 'mrepo: %s, try mrepo -h for a list of all the options' % str(instance)
             sys.exit(1)
 
         for opt, arg in opts:
@@ -232,13 +232,13 @@ class Config:
             configfh = urllib.urlopen(configfile)
             try:
                 self.cfg.readfp(configfh)
-            except ConfigParser.MissingSectionHeaderError:
+            except IOError:
                 die(6, 'Error accessing URL: %s' % configfile)
         else:
             if os.access(configfile, os.R_OK):
                 try:
                     self.cfg.read(configfile)
-                except:
+                except ConfigParser.MissingSectionHeaderError:
                     die(7, 'Syntax error reading file: %s' % configfile)
             else:
                 die(6, 'Error accessing file: %s' % configfile)
@@ -311,9 +311,9 @@ class Config:
         try:
             var = self.cfg.get(section, option)
             info(3, 'Setting option %s in section [%s] to: %s' % (option, section, var))
-        except ConfigParser.NoSectionError, e:
+        except ConfigParser.NoSectionError:
             error(5, 'Failed to find section [%s]' % section)
-        except ConfigParser.NoOptionError, e:
+        except ConfigParser.NoOptionError:
             info(5, 'Setting option %s in section [%s] to: %s (default)' % (option, section, var))
         return var
 
@@ -470,9 +470,9 @@ class Repo:
                     mirrorreposync(url, self.srcdir, '%s-%s' % (self.dist.nick, self.name), self.dist)
                 else:
                     error(2, 'Scheme %s:// not implemented yet (in %s)' % (s, url))
-            except mrepoMirrorException, e:
-                error(0, 'Mirroring failed for %s with message:\n  %s' % (url, e.value))
-                exitcode = 2
+            except mrepoMirrorException as instance:
+                error(0, 'Mirroring failed for %s with message:\n  %s' % (url, instance.value))
+                EXITCODE = 2
         if not self.url:
             ### Create directory in case no URL is given
             mkdir(self.srcdir)
@@ -578,8 +578,8 @@ class Repo:
                 if md in ('createrepo', 'repomd'):
                     self.repomd()
 
-        except mrepoGenerateException, e:
-            error(0, 'Generating repo failed for %s with message:\n  %s' % (self.name, e.value))
+        except mrepoGenerateException as instance:
+            error(0, 'Generating repo failed for %s with message:\n  %s' % (self.name, instance.value))
             exitcode = 2
 
     def repomd(self):
@@ -613,7 +613,7 @@ class Repo:
             info(2, '%s: Create repomd repository for %s' % (self.dist.nick, self.name))
             ret = run('%s %s %s' % (cf.cmd['createrepo'], repoopts, self.wwwdir))
             if ret:
-                raise(mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['createrepo'], ret)))
+                raise mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['createrepo'], ret))
 
 
 class mrepoMirrorException(Exception):
@@ -889,7 +889,7 @@ def mirrorrsync(url, path):
 
     ret = run('%s %s %s %s' % (cf.cmd['rsync'], opts, url, path), dryrun=True)
     if ret:
-        raise(mrepoMirrorException('Failed with return code: %s' % ret))
+        raise mrepoMirrorException('Failed with return code: %s' % ret)
 
 
 def mirrorlftp(url, path, dist):
@@ -932,7 +932,7 @@ def mirrorlftp(url, path, dist):
 
     ret = run('%s %s -c \'%s mirror %s %s %s\'' % (cf.cmd['lftp'], opts, cmds, mirroropts, url, path), dryrun=True)
     if ret:
-        raise(mrepoMirrorException('Failed with return code: %s' % ret))
+        raise mrepoMirrorException('Failed with return code: %s' % ret)
 
 
 def mirrorreposync(url, path, reponame, dist):
@@ -987,7 +987,7 @@ def mirrorreposync(url, path, reponame, dist):
     os.remove(reposync_conf_file)
 
     if ret:
-        raise(mrepoMirrorException('Failed with return code: %s' % ret))
+        raise mrepoMirrorException('Failed with return code: %s' % ret)
 
 
 def which(cmd):
@@ -1252,7 +1252,7 @@ if __name__ == '__main__':
     cf = readconfig()
     try:
         main()
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt:
         die(6, 'Exiting on user request')
     sys.exit(exitcode)
 
