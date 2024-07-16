@@ -537,7 +537,7 @@ class Repo(object):
         lockfile = path_join(CONFIG.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         mkdir(os.path.dirname(lockfile))
         try:
-            file_object = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0600)
+            file_object = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o0600)
             info(6, '%s: Setting lock %s' % (self.dist.nick, lockfile))
             os.write(file_object, '%d' % os.getpid())
             os.close(file_object)
