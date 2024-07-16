@@ -950,11 +950,6 @@ def mirrorreposync(url, path, reponame, dist):
     url = url.replace('reposync://', 'http://')
     url = url.replace('reposyncf://', 'ftp://')
 
-    if cf.reposyncexcldebug:
-        reposync_exclude = "*-debuginfo"
-    else:
-        reposync_exclude = ""
-
     opts = cf.reposyncoptions
     if op.verbose < 3:
         opts = opts + ' -q'
