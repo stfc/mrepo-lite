@@ -58,6 +58,8 @@ DISABLE = ('no', 'off', 'false', '0')
 
 EXITCODE = 0
 
+_SUBST_SUB = re.compile(r'\$\{?(\w+)\}?').sub
+
 
 class Options:
     def __init__(self, args):
@@ -701,9 +703,6 @@ def writefile(filename, text):
     file_object.write(text)
     file_object.close()
 
-_subst_sub = re.compile('\$\{?(\w+)\}?').sub
-
-
 
 def substitute(string, variables, recursion=0):
     "Substitute variables from a string"
@@ -716,7 +715,7 @@ def substitute(string, variables, recursion=0):
             return substitute(value, variables, recursion + 1)
         return matchobj.group(0)
 
-    string = _subst_sub(_substrepl, string)
+    string = _SUBST_SUB(_substrepl, string)
     return string
 
 
