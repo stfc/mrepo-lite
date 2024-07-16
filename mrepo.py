@@ -470,7 +470,7 @@ class Repo:
                     mirrorreposync(url, self.srcdir, '%s-%s' % (self.dist.nick, self.name), self.dist)
                 else:
                     error(2, 'Scheme %s:// not implemented yet (in %s)' % (s, url))
-            except mrepoMirrorException as instance:
+            except MrepoMirrorException as instance:
                 error(0, 'Mirroring failed for %s with message:\n  %s' % (url, instance.value))
                 EXITCODE = 2
         if not self.url:
@@ -578,14 +578,14 @@ class Repo:
                 if md in ('createrepo', 'repomd'):
                     self.repomd()
 
-        except mrepoGenerateException as instance:
+        except MrepoGenerateException as instance:
             error(0, 'Generating repo failed for %s with message:\n  %s' % (self.name, instance.value))
             exitcode = 2
 
     def repomd(self):
         "Create a repomd repository"
         if not cf.cmd['createrepo']:
-            raise mrepoGenerateException('Command createrepo is not found. Skipping.')
+            raise MrepoGenerateException('Command createrepo is not found. Skipping.')
 
         groupfilename = 'comps.xml'
 
@@ -613,10 +613,10 @@ class Repo:
             info(2, '%s: Create repomd repository for %s' % (self.dist.nick, self.name))
             ret = run('%s %s %s' % (cf.cmd['createrepo'], repoopts, self.wwwdir))
             if ret:
-                raise mrepoGenerateException('%s failed with return code: %s' % (cf.cmd['createrepo'], ret))
+                raise MrepoGenerateException('%s failed with return code: %s' % (cf.cmd['createrepo'], ret))
 
 
-class mrepoMirrorException(Exception):
+class MrepoMirrorException(Exception):
     def __init__(self, value):
         self.value = value
 
@@ -624,7 +624,7 @@ class mrepoMirrorException(Exception):
         return repr(self.value)
 
 
-class mrepoGenerateException(Exception):
+class MrepoGenerateException(Exception):
     def __init__(self, value):
         self.value = value
 
@@ -889,7 +889,7 @@ def mirrorrsync(url, path):
 
     ret = run('%s %s %s %s' % (cf.cmd['rsync'], opts, url, path), dryrun=True)
     if ret:
-        raise mrepoMirrorException('Failed with return code: %s' % ret)
+        raise MrepoMirrorException('Failed with return code: %s' % ret)
 
 
 def mirrorlftp(url, path, dist):
@@ -932,7 +932,7 @@ def mirrorlftp(url, path, dist):
 
     ret = run('%s %s -c \'%s mirror %s %s %s\'' % (cf.cmd['lftp'], opts, cmds, mirroropts, url, path), dryrun=True)
     if ret:
-        raise mrepoMirrorException('Failed with return code: %s' % ret)
+        raise MrepoMirrorException('Failed with return code: %s' % ret)
 
 
 def mirrorreposync(url, path, reponame, dist):
@@ -987,7 +987,7 @@ def mirrorreposync(url, path, reponame, dist):
     os.remove(reposync_conf_file)
 
     if ret:
-        raise mrepoMirrorException('Failed with return code: %s' % ret)
+        raise MrepoMirrorException('Failed with return code: %s' % ret)
 
 
 def which(cmd):
