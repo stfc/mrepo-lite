@@ -18,6 +18,7 @@ import ConfigParser
 import getopt
 import glob
 import os
+from os.path import exists as path_exists
 from os.path import join as path_join
 
 import re
@@ -485,7 +486,7 @@ class Repo:
 
         def addfile((filelist, ), path, files):
             for filename in files:
-                if os.path.exists(path_join(path, filename)) and filename.endswith('.rpm'):
+                if path_exists(path_join(path, filename)) and filename.endswith('.rpm'):
                     size = os.stat(path_join(path, filename)).st_size
                     filelist.add((filename, size))
 
@@ -538,9 +539,9 @@ class Repo:
             os.close(fd)
             return True
         except:
-            if os.path.exists(lockfile):
+            if path_exists(lockfile):
                 pid = open(lockfile).read()
-                if os.path.exists('/proc/%s' % pid):
+                if path_exists('/proc/%s' % pid):
                     error(0, '%s: Found existing lock %s owned by pid %s' % (self.dist.nick, lockfile, pid))
                 else:
                     info(6, '%s: Removing stale lock %s' % (self.dist.nick, lockfile))
@@ -556,7 +557,7 @@ class Repo:
             return True
         lockfile = path_join(cf.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         info(6, '%s: Removing lock %s' % (self.dist.nick, lockfile))
-        if os.path.exists(lockfile):
+        if path_exists(lockfile):
             pid = open(lockfile).read()
             if pid == '%s' % os.getpid():
                 os.unlink(lockfile)
@@ -801,7 +802,7 @@ def copy(src, dst):
     if os.path.islink(dst) or os.path.isfile(dst):
         os.unlink(dst)
     mkdir(os.path.dirname(dst))
-    if not os.path.exists(dst):
+    if not path_exists(dst):
         if os.path.isfile(src):
             shutil.copy2(src, dst)
         elif os.path.isdir(src):
@@ -839,7 +840,7 @@ def mkdir(path):
         return
     if os.path.islink(path):
         os.unlink(path)
-    if not os.path.exists(path):
+    if not path_exists(path):
         os.makedirs(path)
 
 
@@ -1080,7 +1081,6 @@ def listrpms(directories, relative=''):
     if relative and not relative.endswith('/'):
         relative += '/'
     isdir = os.path.isdir
-    pathexists = os.path.exists
 
     def processdir(rpms, path, filenames):
         final_path = path
@@ -1088,7 +1088,7 @@ def listrpms(directories, relative=''):
             final_path = relpath(path, relative)
         for filename in filenames:
             filepath = path_join(path, filename)
-            if filename.endswith('.rpm') and pathexists(filepath) and not isdir(filepath):
+            if filename.endswith('.rpm') and path_exists(filepath) and not isdir(filepath):
                 rpms.append((filename, final_path))
 
     rpms = []
