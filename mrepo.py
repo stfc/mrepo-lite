@@ -203,10 +203,10 @@ class Config:
         self.reposyncoptions = self.getoption('main', 'reposync-options', '')
         self.reposynccleanup = self.getoption('main', 'reposync-cleanup', 'yes') not in disable
         self.reposyncnewestonly = self.getoption('main', 'reposync-newest-only', 'no') not in disable
-        self.reposyncexcldebug = self.getoption('main','reposync-exclude-debug', 'yes') not in disable
-        self.reposyncnorepopath = self.getoption('main','reposync-no-repopath', 'yes') not in disable
-        self.reposynctimeout = self.getoption('main','reposync-timeout', '90')
-        self.reposyncminrate = self.getoption('main','reposync-minrate', '250')
+        self.reposyncexcldebug = self.getoption('main', 'reposync-exclude-debug', 'yes') not in disable
+        self.reposyncnorepopath = self.getoption('main', 'reposync-no-repopath', 'yes') not in disable
+        self.reposynctimeout = self.getoption('main', 'reposync-timeout', '90')
+        self.reposyncminrate = self.getoption('main', 'reposync-minrate', '250')
 
         self.rsyncbwlimit = self.getoption('main', 'rsync-bandwidth-limit', None)
         self.rsynccleanup = self.getoption('main', 'rsync-cleanup', 'yes') not in disable
@@ -964,15 +964,15 @@ def mirrorreposync(url, path, reponame, dist):
     reposync_conf_contents += "baseurl=%s\n" % url
     reposync_conf_contents += "enabled=1\n"
     if dist.sslca:
-    	reposync_conf_contents += "sslcacert=%s\n" % dist.sslca
+        reposync_conf_contents += "sslcacert=%s\n" % dist.sslca
     if dist.sslcert:
-    	reposync_conf_contents += "sslclientcert=%s\n" % dist.sslcert
+        reposync_conf_contents += "sslclientcert=%s\n" % dist.sslcert
     if dist.sslkey:
-    	reposync_conf_contents += "sslclientkey=%s\n" % dist.sslkey
+        reposync_conf_contents += "sslclientkey=%s\n" % dist.sslkey
     if cf.reposynctimeout:
-    	reposync_conf_contents += "timeout=%s\n" % cf.reposynctimeout
+        reposync_conf_contents += "timeout=%s\n" % cf.reposynctimeout
     if cf.reposyncminrate:
-    	reposync_conf_contents += "minrate=%s\n" % cf.reposyncminrate
+        reposync_conf_contents += "minrate=%s\n" % cf.reposyncminrate
 
 
     (fd, reposync_conf_file) = tempfile.mkstemp(text=True)

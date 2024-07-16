@@ -30,12 +30,12 @@ except ImportError:
     from distutils.core import setup
 
 setup(
-    name = 'mrepo',
-    version = '0.8.4svn',
-    description = 'RPM repository mirroring tool',
-    author = 'Dag Wieers',
-    author_email ='dag@wieers.com',
-    url = "http://dag.wieers.com/home-made/mrepo/",
+    name='mrepo',
+    version='0.8.4svn',
+    description='RPM repository mirroring tool',
+    author='Dag Wieers',
+    author_email='dag@wieers.com',
+    url="http://dag.wieers.com/home-made/mrepo/",
     scripts=['mrepo.py', 'gensystemid'],
     data_files=[
         ('/etc', ['config/mrepo.conf']),
@@ -44,10 +44,10 @@ setup(
         ('/var/cache/mrepo', []),
         ('/var/www/mrepo', []),
     ],
-    download_url = 'http://dag.wieers.com/home-made/mrepo/mrepo-0.8.4svn.tar.gz',
-    license = 'GPL',
-    platforms = 'Posix',
-    classifiers = [
+    download_url='http://dag.wieers.com/home-made/mrepo/mrepo-0.8.4svn.tar.gz',
+    license='GPL',
+    platforms='Posix',
+    classifiers=[
         'Internet :: WWW/HTTP :: Site Management',
         'System :: Archiving :: Mirroring',
         'System :: Archiving :: Packaging',
@@ -56,7 +56,7 @@ setup(
         'System :: Software Distribution Tools',
         'System :: Systems Administration',
     ],
-    long_description = '''
+    long_description='''
 mrepo builds a local APT/Yum RPM repository from local ISO files, downloaded
 updates, and extra packages from 3rd party repositories. It takes care of
 setting up the ISO files, downloading the RPMs, configuring HTTP access, and
