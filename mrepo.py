@@ -19,6 +19,7 @@ import getopt
 import glob
 import os
 from os.path import exists as path_exists
+from os.path import isdir as path_is_dir
 from os.path import join as path_join
 
 import re
@@ -495,7 +496,7 @@ class Repo:
 
     def check(self):
         "Return what repositories require an update and write .newsha1sum"
-        if not os.path.isdir(self.wwwdir):
+        if not path_is_dir(self.wwwdir):
             return
         sha1file = path_join(self.wwwdir, '.sha1sum')
         remove(sha1file + '.tmp')
@@ -598,13 +599,13 @@ class Repo:
             opts = ' -v' + opts
         if not self.dist.promoteepoch:
             opts = opts + ' -n'
-        if os.path.isdir(self.wwwdir):
+        if path_is_dir(self.wwwdir):
             repoopts = opts
             if cf.cachedir:
                 cachedir = path_join(cf.cachedir, self.dist.nick, self.name)
                 mkdir(cachedir)
                 repoopts = repoopts + ' --cachedir "%s"' % cachedir
-            if os.path.isdir(path_join(self.wwwdir, '.olddata')):
+            if path_is_dir(path_join(self.wwwdir, '.olddata')):
                 remove(path_join(self.wwwdir, '.olddata'))
             groupfile = path_join(cf.srcdir, self.dist.nick, self.name + '-comps.xml')
             if os.path.isfile(groupfile):
@@ -773,8 +774,8 @@ def symlink(src, dst):
         if os.path.samefile(src, abspath(os.readlink(dst), src)):
             return
         os.unlink(dst)
-    elif os.path.isdir(dst):
-        if os.path.isdir(src):
+    elif path_is_dir(dst):
+        if path_is_dir(src):
             if os.path.samefile(src, dst):
                 return
         else:
@@ -788,7 +789,7 @@ def symlink(src, dst):
 
     src = relpath(src, dst)
 
-    if not os.path.isdir(os.path.dirname(dst)):
+    if not path_is_dir(os.path.dirname(dst)):
         mkdir(os.path.dirname(dst))
     os.symlink(src, dst)
 
@@ -797,7 +798,7 @@ def copy(src, dst):
     "Copy a file, force if dst exists"
     if op.dryrun:
         return
-    if os.path.isdir(dst):
+    if path_is_dir(dst):
         dst = path_join(dst, os.path.basename(src))
     if os.path.islink(dst) or os.path.isfile(dst):
         os.unlink(dst)
@@ -805,7 +806,7 @@ def copy(src, dst):
     if not path_exists(dst):
         if os.path.isfile(src):
             shutil.copy2(src, dst)
-        elif os.path.isdir(src):
+        elif path_is_dir(src):
             shutil.copytree(src, dst)
 
 
@@ -816,7 +817,7 @@ def remove(filename):
             return
         if os.path.islink(filename):
             os.unlink(filename)
-        elif os.path.isdir(filename):
+        elif path_is_dir(filename):
             try:
                 os.rmdir(filename)
             except:
@@ -1014,7 +1015,7 @@ def mail(subject, msg):
 
 def readconfig():
     cf = Config()
-    if cf.confdir and os.path.isdir(cf.confdir):
+    if cf.confdir and path_is_dir(cf.confdir):
         files = glob.glob(path_join(cf.confdir, '*.conf'))
         files.sort()
         for configfile in files:
@@ -1080,7 +1081,6 @@ def listrpms(directories, relative=''):
         directories = (directories,)
     if relative and not relative.endswith('/'):
         relative += '/'
-    isdir = os.path.isdir
 
     def processdir(rpms, path, filenames):
         final_path = path
@@ -1088,7 +1088,7 @@ def listrpms(directories, relative=''):
             final_path = relpath(path, relative)
         for filename in filenames:
             filepath = path_join(path, filename)
-            if filename.endswith('.rpm') and path_exists(filepath) and not isdir(filepath):
+            if filename.endswith('.rpm') and path_exists(filepath) and not path_is_dir(filepath):
                 rpms.append((filename, final_path))
 
     rpms = []
