@@ -262,7 +262,7 @@ class Config(object):
                 continue
             else:
                 ### Check if section has appended arch
-                for arch in ARCHS.keys():
+                for arch in ARCHS:
                     if section.endswith('-%s' % arch):
                         archlist = (arch,)
                         distname = section.split('-%s' % arch)[0]
@@ -1113,7 +1113,7 @@ def listrpmlinks(directory):
 
 def main():
     ### Check availability of commands
-    for cmd in CONFIG.cmd.keys():
+    for cmd in CONFIG.cmd:
         if not CONFIG.cmd[cmd]:
             continue
         cmdlist = CONFIG.cmd[cmd].split()
