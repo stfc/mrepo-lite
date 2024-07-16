@@ -26,7 +26,6 @@ class TestSync(unittest.TestCase):
         onlyleft = []
         keyequal = []
         for a, b in mrepo.synciter(left, right):
-            # print "%s, %s, %s" % ( a, b, k )
             if a is None:
                 onlyright.append(b)
             elif b is None:
@@ -69,8 +68,6 @@ class Testlinksync(unittest.TestCase):
         pj = os.path.join
 
         self.tmpdir = tmpdir = mkdtemp(prefix='mrepo_tests_')
-
-        # global "op" is needed by mrepo.Config, horrible for testing!
 
         class TestConfig:
             pass

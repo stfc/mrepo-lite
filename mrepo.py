@@ -50,12 +50,7 @@ archs = {
 
 variables = {}
 
-enable = ('yes', 'on', 'true', '1')
 disable = ('no', 'off', 'false', '0')
-
-for scheme in ('reposync', 'reposyncs', 'reposyncf'):
-    urlparse.uses_netloc.insert(0, scheme)
-    urlparse.uses_query.insert(0, scheme)
 
 
 class Options:
@@ -319,7 +314,6 @@ class Config:
         except ConfigParser.NoSectionError, e:
             error(5, 'Failed to find section [%s]' % section)
         except ConfigParser.NoOptionError, e:
-#           error(4, 'Failed to find option %s in [%s], set to default: %s' % (option, section, var))
             info(5, 'Setting option %s in section [%s] to: %s (default)' % (option, section, var))
         return var
 
@@ -357,7 +351,6 @@ class Dist:
             repo.url = substitute(repo.url, varlist)
 
     def listrepos(self, names=None):
-        ret = []
         if names:
             return [repo for repo in self.repos if repo.name in names]
         else:
@@ -953,11 +946,6 @@ def mirrorreposync(url, path, reponame, dist):
     url = url.replace('reposync://', 'http://')
     url = url.replace('reposyncf://', 'ftp://')
 
-    if cf.reposyncexcldebug:
-        reposync_exclude = "*-debuginfo"
-    else:
-        reposync_exclude = ""
-
     opts = cf.reposyncoptions
     if op.verbose < 3:
         opts = opts + ' -q'
@@ -1016,7 +1004,6 @@ def mail(subject, msg):
     try:
         import smtplib
         smtp = smtplib.SMTP(cf.smtpserver)
-#       server.set_debuglevel(1)
         msg = 'Subject: [mrepo] %s\nX-Mailer: mrepo %s\n\n%s' % (subject, VERSION, msg)
         for email in cf.mailto.split():
             smtp.sendmail(cf.mailfrom, email, 'To: %s\n%s' % (email, msg))
