@@ -124,21 +124,21 @@ class Testlinksync(unittest.TestCase):
 
         rmtree(tmpdir)
 
-    def readlinks(self, dir):
+    def readlinks(self, directory):
         """return a list of (linkname, linktarget) tuples for all files in a directory"""
         pj = os.path.join
         readlink = os.readlink
-        result = [ (l, readlink(pj(dir, l))) for l in os.listdir(dir) ]
+        result = [ (l, readlink(pj(directory, l))) for l in os.listdir(directory) ]
         result.sort()
         return result
 
-    def genlinks(self, links, dir=''):
-        if not dir:
-            dir = self.repo.wwwdir
+    def genlinks(self, links, directory=''):
+        if not directory:
+            directory = self.repo.wwwdir
         pj = os.path.join
         symlink = os.symlink
         for name, target in links:
-            symlink(target, pj(dir, name))
+            symlink(target, pj(directory, name))
 
     def test_listrpms(self):
         srcdir = self.repo.srcdir
