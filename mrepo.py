@@ -18,6 +18,10 @@ import ConfigParser
 import getopt
 import glob
 import os
+from os.path import exists as path_exists
+from os.path import isdir as path_is_dir
+from os.path import join as path_join
+
 import re
 import tempfile
 
@@ -326,7 +330,7 @@ class Dist:
         if arch == 'none':
             self.nick = dist
         self.name = dist
-        self.dir = os.path.join(cf.wwwdir, self.nick)
+        self.dir = path_join(cf.wwwdir, self.nick)
         self.release = None
         self.repos = []
         self.srcdir = cf.srcdir
@@ -357,7 +361,6 @@ class Dist:
             return self.repos
 
     def genmetadata(self):
-        pathjoin = os.path.join
         for repo in self.listrepos(op.repos):
             if not repo.lock('generate'):
                 continue
@@ -389,8 +392,6 @@ class Dist:
         # destfiles is a list of (link_target_base, link_target_dir) tuples
         destfiles.sort()
 
-        pathjoin = os.path.join
-
         def keyfunc(x):
             # compare the basenames
             return x[0]
@@ -400,7 +401,7 @@ class Dist:
             if srcfile is None:
                 # delete the link
                 base, targetdir = destfile
-                linkname = pathjoin(destdir, base)
+                linkname = path_join(destdir, base)
                 info(5, 'Remove link: %s' % (linkname,))
                 if not op.dryrun:
                     os.unlink(linkname)
@@ -408,8 +409,8 @@ class Dist:
             elif destfile is None:
                 base, srcdir = srcfile
                 # create a new link
-                linkname = pathjoin(destdir, base)
-                target = pathjoin(srcdir, base)
+                linkname = path_join(destdir, base)
+                target = path_join(srcdir, base)
                 info(5, 'New link: %s -> %s' % (linkname, target))
                 if not op.dryrun:
                     os.symlink(target, linkname)
@@ -418,10 +419,10 @@ class Dist:
                 # same bases
                 base, srcdir = srcfile
                 base2, curtarget = destfile
-                target = pathjoin(srcdir, base)
+                target = path_join(srcdir, base)
                 if target != curtarget:
                     info(5, 'Changed link %s: current: %s, should be: %s' % (base, curtarget, target))
-                    linkname = pathjoin(destdir, base)
+                    linkname = path_join(destdir, base)
                     if not op.dryrun:
                         os.unlink(linkname)
                         os.symlink(target, linkname)
@@ -436,8 +437,8 @@ class Repo:
         self.name = name
         self.url = url
         self.dist = dist
-        self.srcdir = os.path.join(cf.srcdir, dist.nick, self.name)
-        self.wwwdir = os.path.join(dist.dir, 'RPMS.' + self.name)
+        self.srcdir = path_join(cf.srcdir, dist.nick, self.name)
+        self.wwwdir = path_join(dist.dir, 'RPMS.' + self.name)
 
         self.changed = False
 
@@ -486,8 +487,8 @@ class Repo:
 
         def addfile((filelist, ), path, files):
             for filename in files:
-                if os.path.exists(os.path.join(path, filename)) and filename.endswith('.rpm'):
-                    size = os.stat(os.path.join(path, filename)).st_size
+                if path_exists(path_join(path, filename)) and filename.endswith('.rpm'):
+                    size = os.stat(path_join(path, filename)).st_size
                     filelist.add((filename, size))
 
         os.path.walk(self.srcdir, addfile, (filelist,))
@@ -495,9 +496,9 @@ class Repo:
 
     def check(self):
         "Return what repositories require an update and write .newsha1sum"
-        if not os.path.isdir(self.wwwdir):
+        if not path_is_dir(self.wwwdir):
             return
-        sha1file = os.path.join(self.wwwdir, '.sha1sum')
+        sha1file = path_join(self.wwwdir, '.sha1sum')
         remove(sha1file + '.tmp')
         cursha1 = sha1dir(self.wwwdir)
         if op.force:
@@ -516,7 +517,7 @@ class Repo:
 
     def writesha1(self):
         "Verify .newsha1sum and write a .sha1sum file per repository"
-        sha1file = os.path.join(self.wwwdir, '.sha1sum')
+        sha1file = path_join(self.wwwdir, '.sha1sum')
         if os.path.isfile(sha1file + '.tmp'):
             cursha1 = sha1dir(self.wwwdir)
             tmpsha1 = open(sha1file + '.tmp').read()
@@ -530,7 +531,7 @@ class Repo:
     def lock(self, action):
         if op.dryrun:
             return True
-        lockfile = os.path.join(cf.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
+        lockfile = path_join(cf.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         mkdir(os.path.dirname(lockfile))
         try:
             fd = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0600)
@@ -539,9 +540,9 @@ class Repo:
             os.close(fd)
             return True
         except:
-            if os.path.exists(lockfile):
+            if path_exists(lockfile):
                 pid = open(lockfile).read()
-                if os.path.exists('/proc/%s' % pid):
+                if path_exists('/proc/%s' % pid):
                     error(0, '%s: Found existing lock %s owned by pid %s' % (self.dist.nick, lockfile, pid))
                 else:
                     info(6, '%s: Removing stale lock %s' % (self.dist.nick, lockfile))
@@ -555,9 +556,9 @@ class Repo:
     def unlock(self, action):
         if op.dryrun:
             return True
-        lockfile = os.path.join(cf.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
+        lockfile = path_join(cf.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         info(6, '%s: Removing lock %s' % (self.dist.nick, lockfile))
-        if os.path.exists(lockfile):
+        if path_exists(lockfile):
             pid = open(lockfile).read()
             if pid == '%s' % os.getpid():
                 os.unlink(lockfile)
@@ -598,17 +599,17 @@ class Repo:
             opts = ' -v' + opts
         if not self.dist.promoteepoch:
             opts = opts + ' -n'
-        if os.path.isdir(self.wwwdir):
+        if path_is_dir(self.wwwdir):
             repoopts = opts
             if cf.cachedir:
-                cachedir = os.path.join(cf.cachedir, self.dist.nick, self.name)
+                cachedir = path_join(cf.cachedir, self.dist.nick, self.name)
                 mkdir(cachedir)
                 repoopts = repoopts + ' --cachedir "%s"' % cachedir
-            if os.path.isdir(os.path.join(self.wwwdir, '.olddata')):
-                remove(os.path.join(self.wwwdir, '.olddata'))
-            groupfile = os.path.join(cf.srcdir, self.dist.nick, self.name + '-comps.xml')
+            if path_is_dir(path_join(self.wwwdir, '.olddata')):
+                remove(path_join(self.wwwdir, '.olddata'))
+            groupfile = path_join(cf.srcdir, self.dist.nick, self.name + '-comps.xml')
             if os.path.isfile(groupfile):
-                symlink(groupfile, os.path.join(self.wwwdir, 'comps.xml'))
+                symlink(groupfile, path_join(self.wwwdir, 'comps.xml'))
                 repoopts = repoopts + ' --groupfile "%s"' % groupfile
             info(2, '%s: Create repomd repository for %s' % (self.dist.nick, self.name))
             ret = run('%s %s %s' % (cf.cmd['createrepo'], repoopts, self.wwwdir))
@@ -746,7 +747,7 @@ def symlinkglob(text, *targets):
 
 def abspath(path, reference):
     "Make absolute path from reference"
-    return os.path.normpath(os.path.join(path, reference))
+    return os.path.normpath(path_join(path, reference))
 
 
 def relpath(path, reference):
@@ -773,12 +774,12 @@ def symlink(src, dst):
         if os.path.samefile(src, abspath(os.readlink(dst), src)):
             return
         os.unlink(dst)
-    elif os.path.isdir(dst):
-        if os.path.isdir(src):
+    elif path_is_dir(dst):
+        if path_is_dir(src):
             if os.path.samefile(src, dst):
                 return
         else:
-            dst = os.path.join(dst, os.path.basename(src))
+            dst = path_join(dst, os.path.basename(src))
             symlink(src, dst)
             return
     elif os.path.isfile(dst):
@@ -788,7 +789,7 @@ def symlink(src, dst):
 
     src = relpath(src, dst)
 
-    if not os.path.isdir(os.path.dirname(dst)):
+    if not path_is_dir(os.path.dirname(dst)):
         mkdir(os.path.dirname(dst))
     os.symlink(src, dst)
 
@@ -797,15 +798,15 @@ def copy(src, dst):
     "Copy a file, force if dst exists"
     if op.dryrun:
         return
-    if os.path.isdir(dst):
-        dst = os.path.join(dst, os.path.basename(src))
+    if path_is_dir(dst):
+        dst = path_join(dst, os.path.basename(src))
     if os.path.islink(dst) or os.path.isfile(dst):
         os.unlink(dst)
     mkdir(os.path.dirname(dst))
-    if not os.path.exists(dst):
+    if not path_exists(dst):
         if os.path.isfile(src):
             shutil.copy2(src, dst)
-        elif os.path.isdir(src):
+        elif path_is_dir(src):
             shutil.copytree(src, dst)
 
 
@@ -816,7 +817,7 @@ def remove(filename):
             return
         if os.path.islink(filename):
             os.unlink(filename)
-        elif os.path.isdir(filename):
+        elif path_is_dir(filename):
             try:
                 os.rmdir(filename)
             except:
@@ -831,7 +832,7 @@ def remove(filename):
 
 def removedir(_, dir, files):
     for file in files:
-        remove(os.path.join(dir, file))
+        remove(path_join(dir, file))
 
 
 def mkdir(path):
@@ -840,7 +841,7 @@ def mkdir(path):
         return
     if os.path.islink(path):
         os.unlink(path)
-    if not os.path.exists(path):
+    if not path_exists(path):
         os.makedirs(path)
 
 
@@ -852,7 +853,7 @@ def mirrorrsync(url, path):
 
     # Ensure both source and destination paths end with a trailing slash
     url = url.rstrip('/') + '/'
-    path = os.path.join(path, '')
+    path = path_join(path, '')
 
     mkdir(path)
 
@@ -993,9 +994,9 @@ def mirrorreposync(url, path, reponame, dist):
 def which(cmd):
     "Find executables in PATH environment"
     for path in os.environ.get('PATH', '$PATH').split(':'):
-        if os.path.isfile(os.path.join(path, cmd)):
+        if os.path.isfile(path_join(path, cmd)):
             info(5, 'Found command %s in path %s' % (cmd, path))
-            return os.path.join(path, cmd)
+            return path_join(path, cmd)
     return ''
 
 
@@ -1014,8 +1015,8 @@ def mail(subject, msg):
 
 def readconfig():
     cf = Config()
-    if cf.confdir and os.path.isdir(cf.confdir):
-        files = glob.glob(os.path.join(cf.confdir, '*.conf'))
+    if cf.confdir and path_is_dir(cf.confdir):
+        files = glob.glob(path_join(cf.confdir, '*.conf'))
         files.sort()
         for configfile in files:
             cf.read(configfile)
@@ -1080,23 +1081,20 @@ def listrpms(directories, relative=''):
         directories = (directories,)
     if relative and not relative.endswith('/'):
         relative += '/'
-    isdir = os.path.isdir
-    pathjoin = os.path.join
-    pathexists = os.path.exists
 
     def processdir(rpms, path, filenames):
         final_path = path
         if relative:
             final_path = relpath(path, relative)
         for filename in filenames:
-            filepath = pathjoin(path, filename)
-            if filename.endswith('.rpm') and pathexists(filepath) and not isdir(filepath):
+            filepath = path_join(path, filename)
+            if filename.endswith('.rpm') and path_exists(filepath) and not path_is_dir(filepath):
                 rpms.append((filename, final_path))
 
     rpms = []
     for directory in directories:
         if not directory.startswith('/'):
-            directory = pathjoin(relative, directory)
+            directory = path_join(relative, directory)
         os.path.walk(directory, processdir, rpms)
     rpms.sort()
     return rpms
@@ -1105,10 +1103,9 @@ def listrpms(directories, relative=''):
 def listrpmlinks(directory):
     islink = os.path.islink
     readlink = os.readlink
-    pathjoin = os.path.join
     links = []
     for filename in os.listdir(directory):
-        path = pathjoin(directory, filename)
+        path = path_join(directory, filename)
         if islink(path) and filename.endswith('.rpm'):
             links.append((filename, readlink(path)))
     return links
