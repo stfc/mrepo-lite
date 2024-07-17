@@ -361,8 +361,7 @@ class Dist:
     def listrepos(self, names=None):
         if names:
             return [repo for repo in self.repos if repo.name in names]
-        else:
-            return self.repos
+        return self.repos
 
     def genmetadata(self):
         for repo in self.listrepos(OPTIONS.repos):
@@ -559,7 +558,7 @@ class Repo:
 
     def unlock(self, action):
         if OPTIONS.dryrun:
-            return True
+            return
         lockfile = path_join(CONFIG.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         info(6, '%s: Removing lock %s' % (self.dist.nick, lockfile))
         if path_exists(lockfile):
@@ -683,8 +682,8 @@ def run(text, dryrun=False):
     if not OPTIONS.dryrun or dryrun:
         info(5, 'Execute: %s' % text)
         return os.system(text)
-    else:
-        info(1, 'Not execute: %s' % text)
+    info(1, 'Not execute: %s' % text)
+    return 0
 
 
 def readfile(filename, size=0):
@@ -764,8 +763,7 @@ def relpath(path, reference):
             newpath.append('..')
         newpath.append(path.replace(common, '', 1))
         return '/'.join(newpath)
-    else:
-        return path
+    return path
 
 
 def symlink(src, dst):
