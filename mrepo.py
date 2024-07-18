@@ -330,18 +330,22 @@ class Dist:
     def __init__(self, dist, arch, config):
         self.arch = arch
         self.dist = dist
+        self.enabled = False
         self.nick = dist + '-' + arch
         if arch == 'none':
             self.nick = dist
         self.name = dist
+        self.metadata = []
         self.dir = path_join(config.wwwdir, self.nick)
+        self.promoteepoch = None
         self.release = None
         self.repos = []
         self.srcdir = config.srcdir
-        self.disabled = False
+        self.systemid = None
         self.sslcert = None
         self.sslkey = None
         self.sslca = None
+
 
     def rewrite(self):
         "Rewrite (string) attributes to replace variables by other (string) attributes"
