@@ -1,8 +1,6 @@
 #!/usr/bin/python2
 
 import os
-import sys
-
 import os.path
 from os.path import join as path_join
 

@@ -61,7 +61,7 @@ EXITCODE = 0
 _SUBST_SUB = re.compile(r'\$\{?(\w+)\}?').sub
 
 
-class Options:
+class Options(object):
     def __init__(self, args):
         self.configfile = '/etc/mrepo.conf'
         self.dists = []
@@ -175,7 +175,7 @@ mrepo options:
 '''
 
 
-class Config:
+class Config(object):
     def __init__(self):
         self.read(OPTIONS.configfile)
 
@@ -274,7 +274,7 @@ class Config:
                 continue
             else:
                 ### Check if section has appended arch
-                for arch in ARCHS.keys():
+                for arch in ARCHS:
                     if section.endswith('-%s' % arch):
                         archlist = (arch,)
                         distname = section.split('-%s' % arch)[0]
@@ -338,7 +338,7 @@ class Config:
         return var
 
 
-class Dist:
+class Dist(object):
     def __init__(self, dist, arch, config):
         self.arch = arch
         self.dist = dist
@@ -452,7 +452,7 @@ class Dist:
             repo.changed = True
 
 
-class Repo:
+class Repo(object):
     def __init__(self, name, url, dist, config):
         self.name = name
         self.url = url
@@ -561,7 +561,7 @@ class Repo:
         lockfile = path_join(CONFIG.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         mkdir(os.path.dirname(lockfile))
         try:
-            file_object = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0600)
+            file_object = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o0600)
             info(6, '%s: Setting lock %s' % (self.dist.nick, lockfile))
             os.write(file_object, '%d' % os.getpid())
             os.close(file_object)
@@ -1153,7 +1153,7 @@ def listrpmlinks(directory):
 
 def main():
     ### Check availability of commands
-    for cmd in CONFIG.cmd.keys():
+    for cmd in CONFIG.cmd:
         if not CONFIG.cmd[cmd]:
             continue
         cmdlist = CONFIG.cmd[cmd].split()
