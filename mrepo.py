@@ -76,9 +76,21 @@ class Options:
         self.create_aggregate_repos = False
 
         try:
-            opts, args = getopt.getopt(args, 'c:d:fghnqr:t:uvx',
-                ('config=', 'dist=', 'dry-run', 'force', 'generate', 'help', 'quiet', 'repo=',
-                 'type=', 'update', 'verbose', 'version', 'extras'))
+            opts, args = getopt.getopt(args, 'c:d:fghnqr:t:uvx', (
+                'config=',
+                'dist=',
+                'dry-run',
+                'force',
+                'generate',
+                'help',
+                'quiet',
+                'repo=',
+                'type=',
+                'update',
+                'verbose',
+                'version',
+                'extras',
+            ))
         except getopt.error, instance:
             print 'mrepo: %s, try mrepo -h for a list of all the options' % str(instance)
             sys.exit(1)
@@ -350,11 +362,12 @@ class Dist:
     def rewrite(self):
         "Rewrite (string) attributes to replace variables by other (string) attributes"
         varlist = VARIABLES
-        varlist.update({'arch': self.arch,
-                        'nick': self.nick,
-                        'dist': self.dist,
-                        'release': self.release,
-                      })
+        varlist.update({
+            'arch': self.arch,
+            'nick': self.nick,
+            'dist': self.dist,
+            'release': self.release,
+        })
         for key, value in vars(self).iteritems():
             if isinstance(value, types.StringType):
                 setattr(self, key, substitute(value, varlist))
@@ -532,8 +545,15 @@ class Repo:
             if cursha1 == tmpsha1:
                 writesha1(sha1file, cursha1)
             else:
-                info(5, '%s: Checksum is different. expect: %s, got: %s' % (self.dist.nick, cursha1, tmpsha1))
-                info(1, '%s: Directory changed during generating %s repo, please generate again.' % (self.dist.nick, self.name))
+                info(5, '%s: Checksum is different. expect: %s, got: %s' % (
+                    self.dist.nick,
+                    cursha1,
+                    tmpsha1,
+                ))
+                info(1, '%s: Directory changed during generating %s repo, please generate again.' % (
+                    self.dist.nick,
+                    self.name,
+                ))
 
     def lock(self, action):
         if OPTIONS.dryrun:
@@ -557,7 +577,10 @@ class Repo:
                     self.lock(action)
                     return True
             else:
-                error(0, '%s: Lockfile %s does not exist. Cannot lock. Parallel universe ?' % (self.dist.nick, lockfile))
+                error(0, '%s: Lockfile %s does not exist. Cannot lock. Parallel universe ?' % (
+                    self.dist.nick,
+                    lockfile,
+                ))
         return False
 
     def unlock(self, action):
@@ -570,9 +593,16 @@ class Repo:
             if pid == '%s' % os.getpid():
                 os.unlink(lockfile)
             else:
-                error(0, '%s: Existing lock %s found owned by another process with pid %s. This should NOT happen.' % (self.dist.nick, lockfile, pid))
+                error(0, '%s: Existing lock %s found owned by another process with pid %s. This should NOT happen.' % (
+                    self.dist.nick,
+                    lockfile,
+                    pid,
+                ))
         else:
-            error(0, '%s: Lockfile %s does not exist. Cannot unlock. Something fishy here ?' % (self.dist.nick, lockfile))
+            error(0, '%s: Lockfile %s does not exist. Cannot unlock. Something fishy here ?' % (
+                self.dist.nick,
+                lockfile,
+            ))
 
     def createmd(self):
         global EXITCODE
@@ -985,8 +1015,14 @@ def mirrorreposync(url, path, reponame, dist):
     handle.writelines(reposync_conf_contents)
     handle.close()
 
-    ret = run("%s %s --metadata-path %s/reposync --config '%s' --repoid %s --download-path '%s'" % \
-              (CONFIG.cmd['reposync'], opts, CONFIG.cachedir, reposync_conf_file, reponame, path))
+    ret = run("%s %s --metadata-path %s/reposync --config '%s' --repoid %s --download-path '%s'" % (
+        CONFIG.cmd['reposync'],
+        opts,
+        CONFIG.cachedir,
+        reposync_conf_file,
+        reponame,
+        path,
+    ))
 
     # remove the temporary config
     os.remove(reposync_conf_file)
@@ -1189,7 +1225,12 @@ def main():
 
                 if new or removed:
                     msg = msg + '\n\n\tRepo: %s' % repo.name
-                    info(2, '%s: Repository %s changed (new: %d, removed: %d)' % (dist.nick, repo.name, len(new), len(removed)))
+                    info(2, '%s: Repository %s changed (new: %d, removed: %d)' % (
+                        dist.nick,
+                        repo.name,
+                        len(new),
+                        len(removed),
+                    ))
                     file_object = open(CONFIG.logfile, 'a+')
                     date = time.strftime("%b %d %H:%M:%S", time.gmtime())
 
@@ -1206,7 +1247,13 @@ def main():
                         info(4, '%s: New packages: %s' % (dist.nick, formatlist(pkglist)))
                         distnew += len(pkglist)
                         for element in pkglist:
-                            file_object.write('%s %s/%s Added %s (%d kiB)\n' % (date, dist.nick, repo.name, element[0], element[1] / 1024))
+                            file_object.write('%s %s/%s Added %s (%d kiB)\n' % (
+                                date,
+                                dist.nick,
+                                repo.name,
+                                element[0],
+                                element[1] / 1024,
+                            ))
                             msg = msg + '\n\t\t+ %s (%d kiB)' % (element[0], element[1] / 1024)
 
                     if removed:
@@ -1214,7 +1261,13 @@ def main():
                         info(4, '%s: Removed packages: %s' % (dist.nick, formatlist(pkglist)))
                         distremoved += len(pkglist)
                         for element in pkglist:
-                            file_object.write('%s %s/%s Removed %s (%d kiB)\n' % (date, dist.nick, repo.name, element[0], element[1] / 1024))
+                            file_object.write('%s %s/%s Removed %s (%d kiB)\n' % (
+                                date,
+                                dist.nick,
+                                repo.name,
+                                element[0],
+                                element[1] / 1024,
+                            ))
                             msg = msg + '\n\t\t- %s (%d kiB)' % (element[0], element[1] / 1024)
 
                     file_object.close()
