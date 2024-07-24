@@ -1,11 +1,6 @@
-name = mrepo
-version = $(shell awk '/^Version: / {print $$2}' $(name).spec)
+name = mrepo-lite
+version = $(shell git describe --dirty --broken)
 date = $(shell date +%Y%m%d%H%M)
-
-### Get the branch information from git
-git_ref = $(shell git symbolic-ref -q HEAD)
-git_branch ?= $(lastword $(subst /, ,$(git_ref)))
-git_branch ?= HEAD
 
 prefix = /usr
 sysconfdir = /etc
@@ -17,66 +12,77 @@ mandir = $(datadir)/man
 localstatedir = /var
 
 cachedir = $(localstatedir)/cache/mrepo
-srcdir = $(localstatedir)/mrepo
-wwwdir = $(localstatedir)/www/mrepo
+docdir = $(datadir)/doc/$(name)-$(version)
 
-DESTDIR=
-OFFICIAL=
-
-distversion=$(version)
-rpmrelease=
-ifeq ($(OFFICIAL),)
-    distversion=$(version)-git$(date)
-    rpmrelease=.git$(date)
-endif
-
-all:
-	@echo "There is nothing to be build. Try install !"
-
-install:
-	install -Dp -m0755 mrepo.py $(DESTDIR)$(bindir)/mrepo
-	[ ! -f $(DESTDIR)$(sysconfdir)/mrepo.conf ] && install -D -m0600 config/mrepo.conf $(DESTDIR)$(sysconfdir)/mrepo.conf || :
-	install -d -m0755 $(DESTDIR)$(sysconfdir)/mrepo.conf.d/
-
-	install -d -m0755 $(DESTDIR)$(srcdir)/all/
-	install -d -m0755 $(DESTDIR)$(wwwdir)
-	install -d -m0755 $(DESTDIR)$(cachedir)
-
-	[ "$(DESTDIR)" -o ! -f "$(DESTDIR)$(sysconfdir)/cron.d/mrepo" ] && install -Dp -m0644 config/mrepo.cron $(DESTDIR)$(sysconfdir)/cron.d/mrepo || :
-
-	install -Dp -m0644 config/mrepo.logrotate $(DESTDIR)$(sysconfdir)/logrotate.d/mrepo
-
-	@if [ -z "$(DESTDIR)" -a -x "/sbin/chkconfig" ]; then \
-		/sbin/chkconfig --add mrepo; \
-	elif [ -z "$(DESTDIR)" -a -x "$(sbindir)/chkconfig" ]; then \
-		$(sbindir)/chkconfig --add mrepo; \
-	fi
+.PHONY: all
+all: clean rpm deb
 
 docs:
 	make -C docs
 
-dist: clean
-	sed -i \
-		-e 's#^Source:.*#Source: $(name)-$(distversion).tar.bz2#' \
-		-e 's#^Version:.*#Version: $(version)#' \
-		-e 's#^\(Release: *[0-9]\+\)#\1$(rpmrelease)#' \
-		$(name).spec
-	git ls-tree -r --name-only --full-tree $(git_branch) | \
-		tar -cjf $(name)-$(distversion).tar.bz2 --transform='s,^,$(name)-$(version)/,S' --files-from=-
-	git checkout $(name).spec
+dist:
+	mkdir -p dist/mrepo.conf.d dist/cache
+	cp -f mrepo.py dist/mrepo
+	sed -i 's/#version#/$(version)/' dist/mrepo
 
-rpm: dist
-	rpmbuild -tb --clean --rmspec \
-		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
-		--define "debug_package %{nil}" \
-		--define "_rpmdir %(pwd)" \
-		$(name)-$(distversion).tar.bz2
+.PHONY: package-%
+package-%: dist
+	fpm \
+		--verbose \
+		\
+		--input-type dir \
+		--output-type "$(lastword $(subst -, ,$@))" \
+		--package dist/ \
+		\
+		--name "$(name)" \
+		--version "$(version)" \
+		--iteration 1 \
+		--license GPL \
+		--epoch "$(shell date +%s)" \
+		--architecture noarch \
+		--vendor 'Science and Technology Facilties Council' \
+		--url 'https://github.com/stfc/mrepo-lite' \
+		--description 'mrepo-lite is a tool for mirroring upstream software repositories.' \
+		--category 'System Environment/Base' \
+		\
+		--depends 'createrepo' \
+		--depends 'python >= 2.7' \
+		--conflicts yam \
+		--conflicts mrepo \
+		\
+		--config-files $(sysconfdir)/cron.d/mrepo \
+		--config-files $(sysconfdir)/logrotate.d/mrepo \
+		--config-files $(sysconfdir)/mrepo.conf \
+		--config-files $(sysconfdir)/mrepo.conf.d \
+		\
+		--directories $(sysconfdir)/mrepo.conf.d \
+		--directories $(docdir) \
+		--directories $(cachedir) \
+		\
+		dist/mrepo=$(bindir)/mrepo \
+		dist/cache=$(cachedir) \
+		dist/mrepo.conf.d=$(sysconfdir)/ \
+		config/mrepo.conf=$(sysconfdir)/mrepo.conf \
+		config/mrepo.cron=$(sysconfdir)/cron.d/mrepo \
+		config/mrepo.logrotate=$(sysconfdir)/logrotate.d/mrepo \
+		\
+		config/mrepo-example.conf=$(docdir)/ \
+		config/mrepo-complex.conf=$(docdir)/ \
+		docs/=$(docdir) \
+		AUTHORS=$(docdir) \
+		ChangeLog=$(docdir) \
+		COPYING=$(docdir) \
+		README=$(docdir) \
+		THANKS=$(docdir) \
+		TODO=$(docdir)
 
-srpm: dist
-	rpmbuild -ts --clean --rmsource --rmspec \
-		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
-		--define "_srcrpmdir ../" \
-		$(name)-$(distversion).tar.bz2
+.PHONY: rpm
+rpm: package-rpm
 
+.PHONY: deb
+deb: package-deb
+
+.PHONY: clean
 clean:
 	rm -f README*.html
+	rm -rf dist/

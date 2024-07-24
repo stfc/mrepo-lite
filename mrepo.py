@@ -34,10 +34,9 @@ import types
 import urlparse
 import urllib
 
-__version__ = "$Revision$"
-# $Source$
+__version__ = "#version#"
 
-VERSION = "0.8.9"
+VERSION = __version__
 
 ARCHS = {
     'alpha': ('alpha', 'alphaev5', 'alphaev56', 'alphaev6', 'alphaev67'),
