@@ -46,7 +46,7 @@ package-%: dist
 		--category 'System Environment/Base' \
 		\
 		--depends 'createrepo' \
-		--depends 'python >= 2.7' \
+		--depends 'python2 >= 2.7' \
 		--conflicts yam \
 		--conflicts mrepo \
 		\
