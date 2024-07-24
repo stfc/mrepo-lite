@@ -17,40 +17,10 @@ mandir = $(datadir)/man
 localstatedir = /var
 
 cachedir = $(localstatedir)/cache/mrepo
-srcdir = $(localstatedir)/mrepo
-wwwdir = $(localstatedir)/www/mrepo
 
-DESTDIR=
-OFFICIAL=
-
-distversion=$(version)
-rpmrelease=
-ifeq ($(OFFICIAL),)
-    distversion=$(version)-git$(date)
-    rpmrelease=.git$(date)
-endif
 
 all:
 	@echo "There is nothing to be build. Try install !"
-
-install:
-	install -Dp -m0755 mrepo.py $(DESTDIR)$(bindir)/mrepo
-	[ ! -f $(DESTDIR)$(sysconfdir)/mrepo.conf ] && install -D -m0600 config/mrepo.conf $(DESTDIR)$(sysconfdir)/mrepo.conf || :
-	install -d -m0755 $(DESTDIR)$(sysconfdir)/mrepo.conf.d/
-
-	install -d -m0755 $(DESTDIR)$(srcdir)/all/
-	install -d -m0755 $(DESTDIR)$(wwwdir)
-	install -d -m0755 $(DESTDIR)$(cachedir)
-
-	[ "$(DESTDIR)" -o ! -f "$(DESTDIR)$(sysconfdir)/cron.d/mrepo" ] && install -Dp -m0644 config/mrepo.cron $(DESTDIR)$(sysconfdir)/cron.d/mrepo || :
-
-	install -Dp -m0644 config/mrepo.logrotate $(DESTDIR)$(sysconfdir)/logrotate.d/mrepo
-
-	@if [ -z "$(DESTDIR)" -a -x "/sbin/chkconfig" ]; then \
-		/sbin/chkconfig --add mrepo; \
-	elif [ -z "$(DESTDIR)" -a -x "$(sbindir)/chkconfig" ]; then \
-		$(sbindir)/chkconfig --add mrepo; \
-	fi
 
 docs:
 	make -C docs
