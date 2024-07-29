@@ -863,9 +863,9 @@ def remove(filename):
             remove(name)
 
 
-def removedir(_, dir, files):
-    for file in files:
-        remove(path_join(dir, file))
+def removedir(_, directory, files):
+    for filename in files:
+        remove(path_join(directory, filename))
 
 
 def mkdir(path):
