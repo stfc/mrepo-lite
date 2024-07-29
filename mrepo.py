@@ -90,7 +90,7 @@ class Options(object):
                 'version',
                 'extras',
             ))
-        except getopt.error, instance:
+        except getopt.error as instance:
             print 'mrepo: %s, try mrepo -h for a list of all the options' % str(instance)
             sys.exit(1)
 
