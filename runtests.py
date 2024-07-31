@@ -21,6 +21,8 @@ class TestSync(unittest.TestCase):
         onlyright = []
         onlyleft = []
         keyequal = []
+        # a and b are fine as loop variable names:
+        # pylint: disable=invalid-name
         for a, b in mrepo.synciter(left, right):
             if a is None:
                 onlyright.append(b)
@@ -45,6 +47,8 @@ class TestSync(unittest.TestCase):
         onlyleft = []
         keyequal = []
         # key is the first element
+        # a and b are fine as loop variable names:
+        # pylint: disable=invalid-name
         for a, b in mrepo.synciter(left, right, key=lambda x: x[0]):
             if a is None:
                 onlyright.append(b)

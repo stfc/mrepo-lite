@@ -750,24 +750,24 @@ def substitute(string, variables, recursion=0):
     return string
 
 
-def distsort(a, b):
+def distsort(a, b): # pylint: disable=invalid-name
     return cmp(a.nick, b.nick)
 
 
-def reposort(a, b):
+def reposort(a, b): # pylint: disable=invalid-name
     return cmp(a.name, b.name)
 
 
-def vercmp(a, b):
-    al = a.split('.')
-    bl = b.split('.')
-    minlen = min(len(al), len(bl))
+def vercmp(a, b): # pylint: disable=invalid-name
+    a = a.split('.')
+    b = b.split('.')
+    minlen = min(len(a), len(b))
     for i in range(1, minlen):
-        if cmp(al[i], bl[i]) < 0:
+        if cmp(a[i], b[i]) < 0:
             return -1
-        elif cmp(al[i], bl[i]) > 0:
+        elif cmp(a[i], b[i]) > 0:
             return 1
-    return cmp(len(al), len(bl))
+    return cmp(len(a), len(b))
 
 
 def symlinkglob(text, *targets):
@@ -1068,7 +1068,7 @@ def _nextNone(iterator):
         return None
 
 
-def synciter(a, b, key=None, keya=None, keyb=None):
+def synciter(a, b, key=None, keya=None, keyb=None): # pylint: disable=invalid-name
     """returns an iterator that compares two ordered iterables a and b.
     If keya or keyb are specified, they are called with elements of the corresponding
     iterable. They should return a value that is used to compare two elements.
@@ -1081,34 +1081,34 @@ def synciter(a, b, key=None, keya=None, keyb=None):
         keya = key
     if keyb is None:
         keyb = key
-    ai = iter(a)
-    bi = iter(b)
-    aelem = _nextNone(ai)
-    belem = _nextNone(bi)
+    a = iter(a)
+    b = iter(b)
+    aelem = _nextNone(a)
+    belem = _nextNone(b)
     while not ((aelem is None) or (belem is None)):
         akey = keya(aelem)
         bkey = keyb(belem)
         if akey == bkey:
             yield aelem, belem
-            aelem = _nextNone(ai)
-            belem = _nextNone(bi)
+            aelem = _nextNone(a)
+            belem = _nextNone(b)
         elif akey > bkey:
             # belem missing in a
             yield None, belem
-            belem = _nextNone(bi)
+            belem = _nextNone(b)
         elif bkey > akey:
             # aelem missing in b
             yield aelem, None
-            aelem = _nextNone(ai)
+            aelem = _nextNone(a)
     # rest
     while aelem is not None:
         akey = key(aelem)
         yield aelem, None
-        aelem = _nextNone(ai)
+        aelem = _nextNone(a)
     while belem is not None:
         bkey = key(belem)
         yield None, belem
-        belem = _nextNone(bi)
+        belem = _nextNone(b)
 
 
 def listrpms(directories, relative=''):
