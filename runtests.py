@@ -62,7 +62,7 @@ class Testlinksync(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tmpdir = mkdtemp(prefix='mrepo_tests_')
 
-        class TestConfig:
+        class TestConfig(object):
             pass
 
         self.CONFIG = config = TestConfig() # pylint: disable=invalid-name
