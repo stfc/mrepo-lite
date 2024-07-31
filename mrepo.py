@@ -28,6 +28,7 @@ import tempfile
 from hashlib import sha1 as sha1hash
 
 import shutil
+import smtplib
 import sys
 import time
 import types
@@ -1042,13 +1043,12 @@ def which(cmd):
 def mail(subject, msg):
     info(2, 'Sending mail to: %s' % CONFIG.mailto)
     try:
-        import smtplib
         smtp = smtplib.SMTP(CONFIG.smtpserver)
         msg = 'Subject: [mrepo] %s\nX-Mailer: mrepo %s\n\n%s' % (subject, VERSION, msg)
         for email in CONFIG.mailto.split():
             smtp.sendmail(CONFIG.mailfrom, email, 'To: %s\n%s' % (email, msg))
         smtp.quit()
-    except:
+    except smtplib.SMTPException:
         info(1, 'Sending mail via %s failed.' % CONFIG.smtpserver)
 
 
