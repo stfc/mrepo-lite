@@ -565,7 +565,7 @@ class Repo(object):
             os.write(file_object, '%d' % os.getpid())
             os.close(file_object)
             return True
-        except:
+        except OSError:
             if path_exists(lockfile):
                 pid = open(lockfile).read()
                 if path_exists('/proc/%s' % pid):
@@ -853,7 +853,7 @@ def remove(filename):
         elif path_is_dir(filename):
             try:
                 os.rmdir(filename)
-            except:
+            except OSError:
                 os.path.walk(filename, removedir, ())
                 os.rmdir(filename)
         elif os.path.isfile(filename) or os.path.islink(filename):
