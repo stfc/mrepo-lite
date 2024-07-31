@@ -626,8 +626,6 @@ class Repo(object):
         if not CONFIG.cmd['createrepo']:
             raise MrepoGenerateException('Command createrepo is not found. Skipping.')
 
-        groupfilename = 'comps.xml'
-
         opts = ' ' + CONFIG.createrepooptions
         if OPTIONS.force:
             opts = ' --pretty' + opts
