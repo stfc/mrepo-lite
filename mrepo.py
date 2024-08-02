@@ -489,6 +489,8 @@ class Repo(object):
             except subprocess.CalledProcessError as err:
                 error(1, "hook %s exited with %d" % (hook_name, err.returncode))
                 return False
+        info(4, "hook %s not configured" % hook_name)
+        return True
 
     def mirror(self):
         "Check URL and pass on to mirror-functions."
@@ -645,19 +647,21 @@ class Repo(object):
     def createmd(self):
         global EXITCODE # pylint: disable=global-statement
 
-        if self._call_hook('pre-createmd'):
+        if not self._call_hook('pre-createmd'):
             return
 
-        if self.changed or OPTIONS.force:
-            try:
-                ### Generate repository metadata
-                for metadata in self.dist.metadata:
-                    if metadata in ('createrepo', 'repomd'):
-                        self.repomd()
+        if not self.changed or OPTIONS.force:
+            return
 
-            except MrepoGenerateException as instance:
-                error(0, 'Generating repo failed for %s with message:\n  %s' % (self.name, instance.value))
-                EXITCODE = 2
+        try:
+            ### Generate repository metadata
+            for metadata in self.dist.metadata:
+                if metadata in ('createrepo', 'repomd'):
+                    self.repomd()
+
+        except MrepoGenerateException as instance:
+            error(0, 'Generating repo failed for %s with message:\n  %s' % (self.name, instance.value))
+            EXITCODE = 2
 
         self._call_hook('post-createmd')
 
