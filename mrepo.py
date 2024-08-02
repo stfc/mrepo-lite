@@ -1151,6 +1151,9 @@ def listrpmlinks(directory):
 
 
 def main():
+    OPTIONS = Options(sys.argv[1:])
+    CONFIG = readconfig()
+
     ### Check availability of commands
     for cmd in CONFIG.cmd:
         if not CONFIG.cmd[cmd]:
@@ -1299,8 +1302,6 @@ sys.stderr = os.fdopen(2, 'w', 0)
 
 ### Main entrance
 if __name__ == '__main__':
-    OPTIONS = Options(sys.argv[1:])
-    CONFIG = readconfig()
     try:
         main()
     except KeyboardInterrupt:
