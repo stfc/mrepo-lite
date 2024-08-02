@@ -116,7 +116,7 @@ class Testlinksync(unittest.TestCase):
 
         # for safety-reasons:
         if tmpdir.count('/') < 2:
-            raise Exception("Will not remove tmpdir %s" % ( tmpdir, ))
+            raise Exception("Will not remove tmpdir %s" % tmpdir)
 
         rmtree(tmpdir)
 
@@ -150,7 +150,7 @@ class Testlinksync(unittest.TestCase):
     def test_listrpms_rel(self):
         srcdir = self.repo.srcdir
         linkbase = self.linkbase
-        actual = mrepo.listrpms(srcdir, relative = self.repo.wwwdir)
+        actual = mrepo.listrpms(srcdir, relative=self.repo.wwwdir)
         target = [
             ('0.rpm', linkbase),
             ('1.rpm', linkbase),
