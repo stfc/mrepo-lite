@@ -1063,7 +1063,7 @@ def readconfig():
     return config
 
 
-def _nextNone(iterator):
+def _next_none(iterator):
     try:
         return iterator.next()
     except StopIteration:
@@ -1085,32 +1085,32 @@ def synciter(a, b, key=None, keya=None, keyb=None): # pylint: disable=invalid-na
         keyb = key
     a = iter(a)
     b = iter(b)
-    aelem = _nextNone(a)
-    belem = _nextNone(b)
+    aelem = _next_none(a)
+    belem = _next_none(b)
     while not ((aelem is None) or (belem is None)):
         akey = keya(aelem)
         bkey = keyb(belem)
         if akey == bkey:
             yield aelem, belem
-            aelem = _nextNone(a)
-            belem = _nextNone(b)
+            aelem = _next_none(a)
+            belem = _next_none(b)
         elif akey > bkey:
             # belem missing in a
             yield None, belem
-            belem = _nextNone(b)
+            belem = _next_none(b)
         elif bkey > akey:
             # aelem missing in b
             yield aelem, None
-            aelem = _nextNone(a)
+            aelem = _next_none(a)
     # rest
     while aelem is not None:
         akey = key(aelem)
         yield aelem, None
-        aelem = _nextNone(a)
+        aelem = _next_none(a)
     while belem is not None:
         bkey = key(belem)
         yield None, belem
-        belem = _nextNone(b)
+        belem = _next_none(b)
 
 
 def listrpms(directories, relative=''):
