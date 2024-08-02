@@ -69,7 +69,7 @@ class Testlinksync(unittest.TestCase):
         class TestConfig(object):
             pass
 
-        self.CONFIG = config = TestConfig() # pylint: disable=invalid-name
+        config = TestConfig() # pylint: disable=invalid-name
 
         config.srcdir = path_join(tmpdir, 'src')
         config.wwwdir = path_join(tmpdir, 'dst')

@@ -285,7 +285,7 @@ class Config(object):
 
                 ### Add a distribution for each arch
                 for arch in archlist:
-                    dist = Dist(distname, arch, self)
+                    dist = Dist(distname, arch, config)
                     dist.arch = arch
                     dist.metadata = self.metadata.split()
                     dist.enabled = True
@@ -311,7 +311,7 @@ class Config(object):
                         elif option in ('sslca',):
                             dist.sslca = self.cfg.get(section, option)
                         else:
-                            dist.repos.append(Repo(option, self.cfg.get(section, option), dist, self))
+                            dist.repos.append(Repo(option, self.cfg.get(section, option), dist, config))
 
                     dist.repos.sort(reposort)
                     dist.rewrite()
@@ -558,7 +558,7 @@ class Repo(object):
     def lock(self, action):
         if OPTIONS.dryrun:
             return True
-        lockfile = path_join(CONFIG.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
+        lockfile = path_join(self.config.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         mkdir(os.path.dirname(lockfile))
         try:
             file_object = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o0600)
@@ -586,7 +586,7 @@ class Repo(object):
     def unlock(self, action):
         if OPTIONS.dryrun:
             return
-        lockfile = path_join(CONFIG.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
+        lockfile = path_join(self.config.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         info(6, '%s: Removing lock %s' % (self.dist.nick, lockfile))
         if path_exists(lockfile):
             pid = open(lockfile).read()
@@ -623,10 +623,10 @@ class Repo(object):
 
     def repomd(self):
         "Create a repomd repository"
-        if not CONFIG.cmd['createrepo']:
+        if not self.config.cmd['createrepo']:
             raise MrepoGenerateException('Command createrepo is not found. Skipping.')
 
-        opts = ' ' + CONFIG.createrepooptions
+        opts = ' ' + self.config.createrepooptions
         if OPTIONS.force:
             opts = ' --pretty' + opts
         if OPTIONS.verbose <= 2:
@@ -637,20 +637,20 @@ class Repo(object):
             opts = opts + ' -n'
         if path_is_dir(self.wwwdir):
             repoopts = opts
-            if CONFIG.cachedir:
-                cachedir = path_join(CONFIG.cachedir, self.dist.nick, self.name)
+            if self.config.cachedir:
+                cachedir = path_join(self.config.cachedir, self.dist.nick, self.name)
                 mkdir(cachedir)
                 repoopts = repoopts + ' --cachedir "%s"' % cachedir
             if path_is_dir(path_join(self.wwwdir, '.olddata')):
                 remove(path_join(self.wwwdir, '.olddata'))
-            groupfile = path_join(CONFIG.srcdir, self.dist.nick, self.name + '-comps.xml')
+            groupfile = path_join(self.config.srcdir, self.dist.nick, self.name + '-comps.xml')
             if os.path.isfile(groupfile):
                 symlink(groupfile, path_join(self.wwwdir, 'comps.xml'))
                 repoopts = repoopts + ' --groupfile "%s"' % groupfile
             info(2, '%s: Create repomd repository for %s' % (self.dist.nick, self.name))
-            ret = run('%s %s %s' % (CONFIG.cmd['createrepo'], repoopts, self.wwwdir))
+            ret = run('%s %s %s' % (self.config.cmd['createrepo'], repoopts, self.wwwdir))
             if ret:
-                raise MrepoGenerateException('%s failed with return code: %s' % (CONFIG.cmd['createrepo'], ret))
+                raise MrepoGenerateException('%s failed with return code: %s' % (self.config.cmd['createrepo'], ret))
 
 
 class MrepoMirrorException(Exception):
@@ -881,7 +881,7 @@ def mkdir(path):
 
 def mirrorrsync(url, path):
     "Mirror everything from an rsync:// URL"
-    if not CONFIG.cmd['rsync']:
+    if not self.config.cmd['rsync']:
         error(1, 'rsync was not found. rsync support is therefore disabled.')
         return
 
@@ -891,7 +891,7 @@ def mirrorrsync(url, path):
 
     mkdir(path)
 
-    opts = CONFIG.rsyncoptions
+    opts = self.config.rsyncoptions
     if OPTIONS.verbose <= 2:
         opts = opts + ' -q'
     elif OPTIONS.verbose == 3:
@@ -904,37 +904,37 @@ def mirrorrsync(url, path):
         opts = opts + ' -vvv --progress'
     if OPTIONS.dryrun:
         opts = opts + ' --dry-run'
-    if CONFIG.rsynctimeout:
-        opts = opts + ' --timeout=%s' % CONFIG.rsynctimeout
-    if CONFIG.rsynccleanup:
+    if self.config.rsynctimeout:
+        opts = opts + ' --timeout=%s' % self.config.rsynctimeout
+    if self.config.rsynccleanup:
         opts = opts + ' --delete-after --delete-excluded'
-    if CONFIG.rsyncbwlimit:
-        opts = opts + ' --bwlimit=%s' % CONFIG.rsyncbwlimit
-    if CONFIG.rsyncexclheaders:
+    if self.config.rsyncbwlimit:
+        opts = opts + ' --bwlimit=%s' % self.config.rsyncbwlimit
+    if self.config.rsyncexclheaders:
         opts = opts + ' --exclude=\"/headers/\"'
-    if CONFIG.rsyncexclrepodata:
+    if self.config.rsyncexclrepodata:
         opts = opts + ' --exclude=\"/repodata/\"'
-    if CONFIG.rsyncexclsrpm:
+    if self.config.rsyncexclsrpm:
         opts = opts + ' --exclude=\"*.src.rpm\" --exclude=\"/SRPMS/\"'
-    if CONFIG.rsyncexcldebug:
+    if self.config.rsyncexcldebug:
         opts = opts + ' --exclude=\"*-debuginfo-*.rpm\" --exclude=\"/debug/\"'
     opts = opts + ' --include=\"*.rpm\"'
-    if CONFIG.rsyncexclsrpm or CONFIG.rsyncexcldebug:
+    if self.config.rsyncexclsrpm or self.config.rsyncexcldebug:
         opts = opts + ' --exclude=\"*.*\"'
 
-    ret = run('%s %s %s %s' % (CONFIG.cmd['rsync'], opts, url, path), dryrun=True)
+    ret = run('%s %s %s %s' % (self.config.cmd['rsync'], opts, url, path), dryrun=True)
     if ret:
         raise MrepoMirrorException('Failed with return code: %s' % ret)
 
 
 def mirrorlftp(url, path, dist):
     "Mirror everything from a http://, ftp://, sftp://, fish:// URL"
-    if not CONFIG.cmd['lftp']:
+    if not self.config.cmd['lftp']:
         error(1, 'lftp was not found. fish, ftp, http and sftp support (using lftp) is therefore disabled.')
         return
     mkdir(path)
 
-    cmds = CONFIG.lftpcommands + ';'
+    cmds = self.config.lftpcommands + ';'
 
     if dist.sslcert:
         cmds = cmds + ' set ssl:cert-file ' + dist.sslcert + ';'
@@ -943,36 +943,36 @@ def mirrorlftp(url, path, dist):
     if dist.sslca:
         cmds = cmds + ' set ssl:ca-file ' + dist.sslca + ' ;'
 
-    if CONFIG.lftptimeout:
-        cmds = cmds + ' set net:timeout %s;' % CONFIG.lftptimeout
-    if CONFIG.lftpbwlimit:
-        cmds = cmds + ' set net:limit-total-rate %s:0;' % CONFIG.lftpbwlimit
+    if self.config.lftptimeout:
+        cmds = cmds + ' set net:timeout %s;' % self.config.lftptimeout
+    if self.config.lftpbwlimit:
+        cmds = cmds + ' set net:limit-total-rate %s:0;' % self.config.lftpbwlimit
 
-    opts = CONFIG.lftpoptions
+    opts = self.config.lftpoptions
     if OPTIONS.verbose >= 6:
         opts = opts + ' -d'
 
-    mirroropts = CONFIG.lftpmirroroptions
+    mirroropts = self.config.lftpmirroroptions
     if OPTIONS.verbose >= 3:
         mirroropts = mirroropts + ' -v' * (OPTIONS.verbose - 2)
     if OPTIONS.dryrun:
         mirroropts = mirroropts + ' --dry-run'
-    if CONFIG.lftpcleanup:
+    if self.config.lftpcleanup:
         mirroropts = mirroropts + ' -e'
     mirroropts = mirroropts + ' -I *.rpm -X \"/headers/\" -X \"/repodata/\"'
-    if CONFIG.lftpexclsrpm:
+    if self.config.lftpexclsrpm:
         mirroropts = mirroropts + ' -X \"*.src.rpm\" -X \"/SRPMS/\"'
-    if CONFIG.lftpexcldebug:
+    if self.config.lftpexcldebug:
         mirroropts = mirroropts + ' -X \"*-debuginfo-*.rpm\" -X \"/debug/\"'
 
-    ret = run('%s %s -c \'%s mirror %s %s %s\'' % (CONFIG.cmd['lftp'], opts, cmds, mirroropts, url, path), dryrun=True)
+    ret = run('%s %s -c \'%s mirror %s %s %s\'' % (self.config.cmd['lftp'], opts, cmds, mirroropts, url, path), dryrun=True)
     if ret:
         raise MrepoMirrorException('Failed with return code: %s' % ret)
 
 
 def mirrorreposync(url, path, reponame, dist):
     "Mirror everything from a reposync:// URL"
-    if not CONFIG.cmd['reposync']:
+    if not self.config.cmd['reposync']:
         error(1, 'reposync was not found. reposync support is therefore disabled.')
         return
     mkdir(path)
@@ -981,16 +981,16 @@ def mirrorreposync(url, path, reponame, dist):
     url = url.replace('reposync://', 'http://')
     url = url.replace('reposyncf://', 'ftp://')
 
-    opts = CONFIG.reposyncoptions
+    opts = self.config.reposyncoptions
     if OPTIONS.verbose < 3:
         opts = opts + ' -q'
     if OPTIONS.dryrun:
         opts = opts + ' --urls'
-    if CONFIG.reposynccleanup:
+    if self.config.reposynccleanup:
         opts = opts + ' --delete'
-    if CONFIG.reposyncnewestonly:
+    if self.config.reposyncnewestonly:
         opts = opts + ' --newest-only'
-    if CONFIG.reposyncnorepopath:
+    if self.config.reposyncnorepopath:
         opts = opts + ' --norepopath'
 
     # store a temporary YUM config to use with reposync
@@ -1004,10 +1004,10 @@ def mirrorreposync(url, path, reponame, dist):
         reposync_conf_contents += "sslclientcert=%s\n" % dist.sslcert
     if dist.sslkey:
         reposync_conf_contents += "sslclientkey=%s\n" % dist.sslkey
-    if CONFIG.reposynctimeout:
-        reposync_conf_contents += "timeout=%s\n" % CONFIG.reposynctimeout
-    if CONFIG.reposyncminrate:
-        reposync_conf_contents += "minrate=%s\n" % CONFIG.reposyncminrate
+    if self.config.reposynctimeout:
+        reposync_conf_contents += "timeout=%s\n" % self.config.reposynctimeout
+    if self.config.reposyncminrate:
+        reposync_conf_contents += "minrate=%s\n" % self.config.reposyncminrate
 
 
     (file_object, reposync_conf_file) = tempfile.mkstemp(text=True)
@@ -1016,9 +1016,9 @@ def mirrorreposync(url, path, reponame, dist):
     handle.close()
 
     ret = run("%s %s --metadata-path %s/reposync --config '%s' --repoid %s --download-path '%s'" % (
-        CONFIG.cmd['reposync'],
+        self.config.cmd['reposync'],
         opts,
-        CONFIG.cachedir,
+        self.config.cachedir,
         reposync_conf_file,
         reponame,
         path,
@@ -1041,15 +1041,15 @@ def which(cmd):
 
 
 def mail(subject, msg):
-    info(2, 'Sending mail to: %s' % CONFIG.mailto)
+    info(2, 'Sending mail to: %s' % self.config.mailto)
     try:
-        smtp = smtplib.SMTP(CONFIG.smtpserver)
+        smtp = smtplib.SMTP(self.config.smtpserver)
         msg = 'Subject: [mrepo] %s\nX-Mailer: mrepo %s\n\n%s' % (subject, VERSION, msg)
-        for email in CONFIG.mailto.split():
-            smtp.sendmail(CONFIG.mailfrom, email, 'To: %s\n%s' % (email, msg))
+        for email in self.config.mailto.split():
+            smtp.sendmail(self.config.mailfrom, email, 'To: %s\n%s' % (email, msg))
         smtp.quit()
     except smtplib.SMTPException:
-        info(1, 'Sending mail via %s failed.' % CONFIG.smtpserver)
+        info(1, 'Sending mail via %s failed.' % self.config.smtpserver)
 
 
 def readconfig():
@@ -1152,43 +1152,43 @@ def listrpmlinks(directory):
 
 def main():
     OPTIONS = Options(sys.argv[1:])
-    CONFIG = readconfig()
+    config = readconfig()
 
     ### Check availability of commands
-    for cmd in CONFIG.cmd:
-        if not CONFIG.cmd[cmd]:
+    for cmd in config.cmd:
+        if not config.cmd[cmd]:
             continue
-        cmdlist = CONFIG.cmd[cmd].split()
+        cmdlist = config.cmd[cmd].split()
         if not os.path.isfile(cmdlist[0]):
             cmdlist[0] = which(cmdlist[0])
         if cmdlist[0] and not os.path.isfile(cmdlist[0]):
             error(4, '%s command not found as %s, support disabled' % (cmd, cmdlist[0]))
-            CONFIG.cmd[cmd] = ''
+            config.cmd[cmd] = ''
         else:
-            CONFIG.cmd[cmd] = ' '.join(cmdlist)
-    if not CONFIG.cmd['createrepo']:
+            config.cmd[cmd] = ' '.join(cmdlist)
+    if not config.cmd['createrepo']:
         error(1, 'No tools found to generate repository metadata. Please install createrepo.')
 
     ### Set proxy-related environment variables
-    if CONFIG.no_proxy:
-        os.environ['no_proxy'] = CONFIG.no_proxy
-    if CONFIG.ftp_proxy:
-        os.environ['ftp_proxy'] = CONFIG.ftp_proxy
-    if CONFIG.http_proxy:
-        os.environ['http_proxy'] = CONFIG.http_proxy
-    if CONFIG.https_proxy:
-        os.environ['https_proxy'] = CONFIG.https_proxy
-    if CONFIG.rsync_proxy:
-        os.environ['RSYNC_PROXY'] = CONFIG.rsync_proxy
+    if config.no_proxy:
+        os.environ['no_proxy'] = config.no_proxy
+    if config.ftp_proxy:
+        os.environ['ftp_proxy'] = config.ftp_proxy
+    if config.http_proxy:
+        os.environ['http_proxy'] = config.http_proxy
+    if config.https_proxy:
+        os.environ['https_proxy'] = config.https_proxy
+    if config.rsync_proxy:
+        os.environ['RSYNC_PROXY'] = config.rsync_proxy
 
     ### Select list of distributions in order of appearance
     if not OPTIONS.dists:
-        dists = CONFIG.dists
+        dists = config.dists
     else:
         dists = []
         for name in OPTIONS.dists:
             append = False
-            for dist in CONFIG.alldists:
+            for dist in config.alldists:
                 if name == dist.nick or name == dist.dist:
                     dists.append(dist)
                     append = True
@@ -1233,7 +1233,7 @@ def main():
                         len(new),
                         len(removed),
                     ))
-                    file_object = open(CONFIG.logfile, 'a+')
+                    file_object = open(config.logfile, 'a+')
                     date = time.strftime("%b %d %H:%M:%S", time.gmtime())
 
                     def sortedlist(pkgs):
