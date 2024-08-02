@@ -469,7 +469,7 @@ class Repo(object):
 
     def mirror(self):
         "Check URL and pass on to mirror-functions."
-        global EXITCODE
+        global EXITCODE # pylint: disable=global-statement
 
         ### Make a snapshot of the directory
         self.oldlist = self.rpmlist()
@@ -604,7 +604,7 @@ class Repo(object):
             ))
 
     def createmd(self):
-        global EXITCODE
+        global EXITCODE # pylint: disable=global-statement
         metadata = ('createrepo', 'repomd')
 
         if not self.changed and not OPTIONS.force:
