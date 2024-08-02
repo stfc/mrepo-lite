@@ -656,6 +656,7 @@ class Repo(object):
 class MrepoMirrorException(Exception):
     def __init__(self, value):
         self.value = value
+        Exception.__init__(self)
 
     def __str__(self):
         return repr(self.value)
@@ -664,6 +665,7 @@ class MrepoMirrorException(Exception):
 class MrepoGenerateException(Exception):
     def __init__(self, value):
         self.value = value
+        Exception.__init__(self)
 
     def __str__(self):
         return repr(self.value)
