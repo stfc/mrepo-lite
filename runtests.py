@@ -21,6 +21,8 @@ class TestSync(unittest.TestCase):
         onlyright = []
         onlyleft = []
         keyequal = []
+        # a and b are fine as loop variable names:
+        # pylint: disable=invalid-name
         for a, b in mrepo.synciter(left, right):
             if a is None:
                 onlyright.append(b)
@@ -45,6 +47,8 @@ class TestSync(unittest.TestCase):
         onlyleft = []
         keyequal = []
         # key is the first element
+        # a and b are fine as loop variable names:
+        # pylint: disable=invalid-name
         for a, b in mrepo.synciter(left, right, key=lambda x: x[0]):
             if a is None:
                 onlyright.append(b)
@@ -62,10 +66,10 @@ class Testlinksync(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tmpdir = mkdtemp(prefix='mrepo_tests_')
 
-        class TestConfig:
+        class TestConfig(object):
             pass
 
-        self.CONFIG = config = TestConfig()
+        self.CONFIG = config = TestConfig() # pylint: disable=invalid-name
 
         config.srcdir = path_join(tmpdir, 'src')
         config.wwwdir = path_join(tmpdir, 'dst')
@@ -81,8 +85,10 @@ class Testlinksync(unittest.TestCase):
         # tmp/dst/testdist-i386/RPMS.testrepo
         os.makedirs(repo.wwwdir)
 
-        for f in xrange(4):
-            __touch(path_join(srcdir, str(f) + '.rpm'))
+        # __touch is unittest magic:
+        # pylint: disable=undefined-variable
+        for i in xrange(4):
+            __touch(path_join(srcdir, str(i) + '.rpm'))
         __touch(path_join(srcdir, 'dontsync.txt'))
 
         os.mkdir(path_join(srcdir, 'a'))
@@ -91,8 +97,8 @@ class Testlinksync(unittest.TestCase):
 
         self.localdir = localdir = path_join(config.srcdir, 'testdist-i386', 'local')
         os.makedirs(localdir)
-        for f in ('local.rpm', 'dont_sync2.txt'):
-            __touch(path_join(localdir, f))
+        for i in ('local.rpm', 'dont_sync2.txt'):
+            __touch(path_join(localdir, i))
 
         # this should be the result when linksync'ing srcdir
         self.linkbase = linkbase = '../../../src/testdist-i386/testrepo'
@@ -110,7 +116,7 @@ class Testlinksync(unittest.TestCase):
 
         # for safety-reasons:
         if tmpdir.count('/') < 2:
-            raise Exception("Will not remove tmpdir %s" % ( tmpdir, ))
+            raise Exception("Will not remove tmpdir %s" % tmpdir)
 
         rmtree(tmpdir)
 
@@ -144,7 +150,7 @@ class Testlinksync(unittest.TestCase):
     def test_listrpms_rel(self):
         srcdir = self.repo.srcdir
         linkbase = self.linkbase
-        actual = mrepo.listrpms(srcdir, relative = self.repo.wwwdir)
+        actual = mrepo.listrpms(srcdir, relative=self.repo.wwwdir)
         target = [
             ('0.rpm', linkbase),
             ('1.rpm', linkbase),
@@ -220,7 +226,7 @@ class Testlinksync(unittest.TestCase):
     def test_linksync_mod(self):
         self.dist.linksync(self.repo)
 
-def _Testlinksync__touch(filename):
+def _Testlinksync__touch(filename): # pylint: disable=invalid-name
     open(filename, 'a')
 
 

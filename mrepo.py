@@ -28,6 +28,7 @@ import tempfile
 from hashlib import sha1 as sha1hash
 
 import shutil
+import smtplib
 import sys
 import time
 import types
@@ -90,7 +91,7 @@ class Options(object):
                 'version',
                 'extras',
             ))
-        except getopt.error, instance:
+        except getopt.error as instance:
             print 'mrepo: %s, try mrepo -h for a list of all the options' % str(instance)
             sys.exit(1)
 
@@ -200,7 +201,7 @@ class Config(object):
         self.ftp_proxy = self.getoption('main', 'ftp_proxy', None)
         self.http_proxy = self.getoption('main', 'http_proxy', None)
         self.https_proxy = self.getoption('main', 'https_proxy', None)
-        self.RSYNC_PROXY = self.getoption('main', 'RSYNC_PROXY', None)
+        self.rsync_proxy = self.getoption('main', 'RSYNC_PROXY', None)
 
         self.cmd = {}
         self.cmd['createrepo'] = self.getoption('main', 'createrepocmd', '/usr/bin/createrepo')
@@ -411,9 +412,9 @@ class Dist(object):
         # destfiles is a list of (link_target_base, link_target_dir) tuples
         destfiles.sort()
 
-        def keyfunc(x):
+        def keyfunc(key):
             # compare the basenames
-            return x[0]
+            return key[0]
 
         changed = False
         for srcfile, destfile in synciter(srcfiles, destfiles, key=keyfunc):
@@ -469,7 +470,7 @@ class Repo(object):
 
     def mirror(self):
         "Check URL and pass on to mirror-functions."
-        global EXITCODE
+        global EXITCODE # pylint: disable=global-statement
 
         ### Make a snapshot of the directory
         self.oldlist = self.rpmlist()
@@ -565,7 +566,7 @@ class Repo(object):
             os.write(file_object, '%d' % os.getpid())
             os.close(file_object)
             return True
-        except:
+        except OSError:
             if path_exists(lockfile):
                 pid = open(lockfile).read()
                 if path_exists('/proc/%s' % pid):
@@ -604,7 +605,7 @@ class Repo(object):
             ))
 
     def createmd(self):
-        global EXITCODE
+        global EXITCODE # pylint: disable=global-statement
         metadata = ('createrepo', 'repomd')
 
         if not self.changed and not OPTIONS.force:
@@ -624,8 +625,6 @@ class Repo(object):
         "Create a repomd repository"
         if not CONFIG.cmd['createrepo']:
             raise MrepoGenerateException('Command createrepo is not found. Skipping.')
-
-        groupfilename = 'comps.xml'
 
         opts = ' ' + CONFIG.createrepooptions
         if OPTIONS.force:
@@ -657,6 +656,7 @@ class Repo(object):
 class MrepoMirrorException(Exception):
     def __init__(self, value):
         self.value = value
+        Exception.__init__(self)
 
     def __str__(self):
         return repr(self.value)
@@ -665,6 +665,7 @@ class MrepoMirrorException(Exception):
 class MrepoGenerateException(Exception):
     def __init__(self, value):
         self.value = value
+        Exception.__init__(self)
 
     def __str__(self):
         return repr(self.value)
@@ -751,24 +752,24 @@ def substitute(string, variables, recursion=0):
     return string
 
 
-def distsort(a, b):
+def distsort(a, b): # pylint: disable=invalid-name
     return cmp(a.nick, b.nick)
 
 
-def reposort(a, b):
+def reposort(a, b): # pylint: disable=invalid-name
     return cmp(a.name, b.name)
 
 
-def vercmp(a, b):
-    al = a.split('.')
-    bl = b.split('.')
-    minlen = min(len(al), len(bl))
+def vercmp(a, b): # pylint: disable=invalid-name
+    a = a.split('.')
+    b = b.split('.')
+    minlen = min(len(a), len(b))
     for i in range(1, minlen):
-        if cmp(al[i], bl[i]) < 0:
+        if cmp(a[i], b[i]) < 0:
             return -1
-        elif cmp(al[i], bl[i]) > 0:
+        elif cmp(a[i], b[i]) > 0:
             return 1
-    return cmp(len(al), len(bl))
+    return cmp(len(a), len(b))
 
 
 def symlinkglob(text, *targets):
@@ -853,7 +854,7 @@ def remove(filename):
         elif path_is_dir(filename):
             try:
                 os.rmdir(filename)
-            except:
+            except OSError:
                 os.path.walk(filename, removedir, ())
                 os.rmdir(filename)
         elif os.path.isfile(filename) or os.path.islink(filename):
@@ -863,9 +864,9 @@ def remove(filename):
             remove(name)
 
 
-def removedir(_, dir, files):
-    for file in files:
-        remove(path_join(dir, file))
+def removedir(_, directory, files):
+    for filename in files:
+        remove(path_join(directory, filename))
 
 
 def mkdir(path):
@@ -1042,13 +1043,12 @@ def which(cmd):
 def mail(subject, msg):
     info(2, 'Sending mail to: %s' % CONFIG.mailto)
     try:
-        import smtplib
         smtp = smtplib.SMTP(CONFIG.smtpserver)
         msg = 'Subject: [mrepo] %s\nX-Mailer: mrepo %s\n\n%s' % (subject, VERSION, msg)
         for email in CONFIG.mailto.split():
             smtp.sendmail(CONFIG.mailfrom, email, 'To: %s\n%s' % (email, msg))
         smtp.quit()
-    except:
+    except smtplib.SMTPException:
         info(1, 'Sending mail via %s failed.' % CONFIG.smtpserver)
 
 
@@ -1063,14 +1063,14 @@ def readconfig():
     return config
 
 
-def _nextNone(iterator):
+def _next_none(iterator):
     try:
         return iterator.next()
     except StopIteration:
         return None
 
 
-def synciter(a, b, key=None, keya=None, keyb=None):
+def synciter(a, b, key=None, keya=None, keyb=None): # pylint: disable=invalid-name
     """returns an iterator that compares two ordered iterables a and b.
     If keya or keyb are specified, they are called with elements of the corresponding
     iterable. They should return a value that is used to compare two elements.
@@ -1083,34 +1083,34 @@ def synciter(a, b, key=None, keya=None, keyb=None):
         keya = key
     if keyb is None:
         keyb = key
-    ai = iter(a)
-    bi = iter(b)
-    aelem = _nextNone(ai)
-    belem = _nextNone(bi)
+    a = iter(a)
+    b = iter(b)
+    aelem = _next_none(a)
+    belem = _next_none(b)
     while not ((aelem is None) or (belem is None)):
         akey = keya(aelem)
         bkey = keyb(belem)
         if akey == bkey:
             yield aelem, belem
-            aelem = _nextNone(ai)
-            belem = _nextNone(bi)
+            aelem = _next_none(a)
+            belem = _next_none(b)
         elif akey > bkey:
             # belem missing in a
             yield None, belem
-            belem = _nextNone(bi)
+            belem = _next_none(b)
         elif bkey > akey:
             # aelem missing in b
             yield aelem, None
-            aelem = _nextNone(ai)
+            aelem = _next_none(a)
     # rest
     while aelem is not None:
         akey = key(aelem)
         yield aelem, None
-        aelem = _nextNone(ai)
+        aelem = _next_none(a)
     while belem is not None:
         bkey = key(belem)
         yield None, belem
-        belem = _nextNone(bi)
+        belem = _next_none(b)
 
 
 def listrpms(directories, relative=''):
@@ -1175,8 +1175,8 @@ def main():
         os.environ['http_proxy'] = CONFIG.http_proxy
     if CONFIG.https_proxy:
         os.environ['https_proxy'] = CONFIG.https_proxy
-    if CONFIG.RSYNC_PROXY:
-        os.environ['RSYNC_PROXY'] = CONFIG.RSYNC_PROXY
+    if CONFIG.rsync_proxy:
+        os.environ['RSYNC_PROXY'] = CONFIG.rsync_proxy
 
     ### Select list of distributions in order of appearance
     if not OPTIONS.dists:

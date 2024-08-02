@@ -15,4 +15,4 @@ jobs:
         pip install pylint
     - name: Analysing the code with pylint
       run: |
-        pylint --max-line-length 120 --disable=R $(git ls-files '*.py')
+        pylint --max-line-length 120 --disable=R,missing-docstring,too-many-lines $(git ls-files '*.py')
