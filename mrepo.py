@@ -237,6 +237,16 @@ class Config(object):
         self.rsyncoptions = self.getoption('main', 'rsync-options', '-rtHL --partial')
         self.rsynctimeout = self.getoption('main', 'rsync-timeout', None)
 
+        self.hooks = {}
+
+        self.hooks['pre-mirror'] = self.getoption('main', 'hook-pre-mirror', None)
+        self.hooks['post-mirror'] = self.getoption('main', 'hook-post-mirror', None)
+        self.hooks['pre-createmd'] = self.getoption('main', 'hook-pre-createmd', None)
+        self.hooks['post-createmd'] = self.getoption('main', 'hook-post-createmd', None)
+        self.hooks['pre-new-repo'] = self.getoption('main', 'hook-pre-new-repo', None)
+        self.hooks['lock'] = self.getoption('main', 'hook-lock', None)
+        self.hooks['unlock'] = self.getoption('main', 'hook-unlock', None)
+
         self.alldists = []
         self.dists = []
 
@@ -358,7 +368,6 @@ class Dist(object):
         self.sslkey = None
         self.sslca = None
 
-
     def rewrite(self):
         "Rewrite (string) attributes to replace variables by other (string) attributes"
         varlist = VARIABLES
@@ -468,9 +477,15 @@ class Repo(object):
     def __repr__(self):
         return self.name
 
+    def _call_hook(self, hook_name):
+        if hook_name in CONFIG.hooks and CONFIG.hooks[hook_name]:
+            run("%s '%s' '%s'" % (CONFIG.hooks[hook_name], hook_name, self.srcdir))
+
     def mirror(self):
         "Check URL and pass on to mirror-functions."
         global EXITCODE # pylint: disable=global-statement
+
+        self._call_hook('pre-mirror')
 
         ### Make a snapshot of the directory
         self.oldlist = self.rpmlist()
@@ -500,6 +515,8 @@ class Repo(object):
 
         ### Make a snapshot of the directory
         self.newlist = self.rpmlist()
+
+        self._call_hook('post-mirror')
 
     def rpmlist(self):
         "Capture a list of packages in the repository"
@@ -558,8 +575,12 @@ class Repo(object):
     def lock(self, action):
         if OPTIONS.dryrun:
             return True
+
+        self._call_hook('lock')
+
         lockfile = path_join(CONFIG.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         mkdir(os.path.dirname(lockfile))
+
         try:
             file_object = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o0600)
             info(6, '%s: Setting lock %s' % (self.dist.nick, lockfile))
@@ -586,6 +607,9 @@ class Repo(object):
     def unlock(self, action):
         if OPTIONS.dryrun:
             return
+
+        self._call_hook('unlock')
+
         lockfile = path_join(CONFIG.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         info(6, '%s: Removing lock %s' % (self.dist.nick, lockfile))
         if path_exists(lockfile):
@@ -608,18 +632,20 @@ class Repo(object):
         global EXITCODE # pylint: disable=global-statement
         metadata = ('createrepo', 'repomd')
 
-        if not self.changed and not OPTIONS.force:
-            return
+        self._call_hook('pre-createmd')
 
-        try:
-            ### Generate repository metadata
-            for metadata in self.dist.metadata:
-                if metadata in ('createrepo', 'repomd'):
-                    self.repomd()
+        if self.changed or OPTIONS.force:
+            try:
+                ### Generate repository metadata
+                for metadata in self.dist.metadata:
+                    if metadata in ('createrepo', 'repomd'):
+                        self.repomd()
 
-        except MrepoGenerateException as instance:
-            error(0, 'Generating repo failed for %s with message:\n  %s' % (self.name, instance.value))
-            EXITCODE = 2
+            except MrepoGenerateException as instance:
+                error(0, 'Generating repo failed for %s with message:\n  %s' % (self.name, instance.value))
+                EXITCODE = 2
+
+        self._call_hook('post-createmd')
 
     def repomd(self):
         "Create a repomd repository"
