@@ -81,8 +81,10 @@ class Testlinksync(unittest.TestCase):
         # tmp/dst/testdist-i386/RPMS.testrepo
         os.makedirs(repo.wwwdir)
 
-        for f in xrange(4):
-            __touch(path_join(srcdir, str(f) + '.rpm'))
+        # __touch is unittest magic:
+        # pylint: disable=undefined-variable
+        for i in xrange(4):
+            __touch(path_join(srcdir, str(i) + '.rpm'))
         __touch(path_join(srcdir, 'dontsync.txt'))
 
         os.mkdir(path_join(srcdir, 'a'))
@@ -91,8 +93,8 @@ class Testlinksync(unittest.TestCase):
 
         self.localdir = localdir = path_join(config.srcdir, 'testdist-i386', 'local')
         os.makedirs(localdir)
-        for f in ('local.rpm', 'dont_sync2.txt'):
-            __touch(path_join(localdir, f))
+        for i in ('local.rpm', 'dont_sync2.txt'):
+            __touch(path_join(localdir, i))
 
         # this should be the result when linksync'ing srcdir
         self.linkbase = linkbase = '../../../src/testdist-i386/testrepo'
@@ -220,7 +222,7 @@ class Testlinksync(unittest.TestCase):
     def test_linksync_mod(self):
         self.dist.linksync(self.repo)
 
-def _Testlinksync__touch(filename):
+def _Testlinksync__touch(filename): # pylint: disable=invalid-name
     open(filename, 'a')
 
 
