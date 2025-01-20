@@ -1015,10 +1015,9 @@ def mirrorreposync(url, path, reponame, dist):
     handle.writelines(reposync_conf_contents)
     handle.close()
 
-    ret = run("%s %s --metadata-path %s/reposync --config '%s' --repoid %s --download-path '%s'" % (
+    ret = run("%s %s --config '%s' --repoid %s --download-path '%s'" % (
         CONFIG.cmd['reposync'],
         opts,
-        CONFIG.cachedir,
         reposync_conf_file,
         reponame,
         path,
