@@ -1041,6 +1041,9 @@ def which(cmd):
 
 
 def mail(subject, msg):
+    if not CONFIG.mailto:
+        info(2, 'mailto not configured, not sending mail')
+        return
     info(2, 'Sending mail to: %s' % CONFIG.mailto)
     try:
         smtp = smtplib.SMTP(CONFIG.smtpserver)
