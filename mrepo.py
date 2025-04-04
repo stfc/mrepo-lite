@@ -21,6 +21,7 @@ import os
 from os.path import exists as path_exists
 from os.path import isdir as path_is_dir
 from os.path import join as path_join
+import socket
 
 import re
 import tempfile
@@ -1040,6 +1041,9 @@ def which(cmd):
 
 
 def mail(subject, msg):
+    if not CONFIG.mailto:
+        info(2, 'mailto not configured, not sending mail')
+        return
     info(2, 'Sending mail to: %s' % CONFIG.mailto)
     try:
         smtp = smtplib.SMTP(CONFIG.smtpserver)
@@ -1047,7 +1051,7 @@ def mail(subject, msg):
         for email in CONFIG.mailto.split():
             smtp.sendmail(CONFIG.mailfrom, email, 'To: %s\n%s' % (email, msg))
         smtp.quit()
-    except smtplib.SMTPException:
+    except (smtplib.SMTPException, socket.error):
         info(1, 'Sending mail via %s failed.' % CONFIG.smtpserver)
 
 
