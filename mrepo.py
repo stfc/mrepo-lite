@@ -1,4 +1,5 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
+# pylint: disable=consider-using-f-string
 
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the GNU Library General Public License as published by
@@ -14,7 +15,7 @@
 ### Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ### Copyright 2004-2007 Dag Wieers <dag@wieers.com>
 
-import ConfigParser
+import configparser
 import getopt
 import glob
 import os
@@ -28,13 +29,13 @@ import tempfile
 
 from hashlib import sha1 as sha1hash
 
+from operator import attrgetter
 import shutil
 import smtplib
 import sys
 import time
-import types
-import urlparse
-import urllib
+import urllib.request
+import urllib.parse
 
 __version__ = "#version#"
 
@@ -93,14 +94,14 @@ class Options(object):
                 'extras',
             ))
         except getopt.error as instance:
-            print 'mrepo: %s, try mrepo -h for a list of all the options' % str(instance)
+            print('mrepo: %s, try mrepo -h for a list of all the options' % str(instance))
             sys.exit(1)
 
         for opt, arg in opts:
             if opt in ('-c', '--config'):
                 self.configfile = os.path.abspath(arg)
             elif opt in ('-d', '--dist'):
-                print 'mrepo: the use of -d or --dist as an option is deprecated, use the argument list'
+                print('mrepo: the use of -d or --dist as an option is deprecated, use the argument list')
                 self.dists = self.dists + arg.split(',')
             elif opt in ('-f', '--force'):
                 self.force = True
@@ -108,7 +109,7 @@ class Options(object):
                 self.generate = True
             elif opt in ('-h', '--help'):
                 self.usage()
-                print
+                print()
                 self.help()
                 sys.exit(0)
             elif opt in ('-n', '--dry-run'):
@@ -127,7 +128,7 @@ class Options(object):
                 self.version()
                 sys.exit(0)
             elif opt in ('-x', '--extras'):
-                print 'mrepo: the use of -x or --extras is deprecated, use -u and -r instead'
+                print('mrepo: the use of -x or --extras is deprecated, use -u and -r instead')
                 self.update = True
 
         if not self.types:
@@ -142,24 +143,24 @@ class Options(object):
             self.verbose = 0
 
         if self.verbose >= 3:
-            print 'Verbosity set to level %d' % (self.verbose - 1)
-            print 'Using configfile %s' % self.configfile
+            print('Verbosity set to level %d' % (self.verbose - 1))
+            print('Using configfile %s' % self.configfile)
 
     def version(self):
-        print 'mrepo %s' % VERSION
-        print 'Written by Dag Wieers <dag@wieers.com>'
-        print 'Homepage at http://dag.wieers.com/home-made/mrepo/'
-        print
-        print 'platform %s/%s' % (os.name, sys.platform)
-        print 'python %s' % sys.version
-        print
-        print 'build revision $Rev$'
+        print('mrepo %s' % VERSION)
+        print('Written by Dag Wieers <dag@wieers.com>')
+        print('Homepage at http://dag.wieers.com/home-made/mrepo/')
+        print()
+        print('platform %s/%s' % (os.name, sys.platform))
+        print('python %s' % sys.version)
+        print()
+        print('build revision $Rev$')
 
     def usage(self):
-        print 'usage: mrepo [options] dist1 [dist2-arch ..]'
+        print('usage: mrepo [options] dist1 [dist2-arch ..]')
 
     def help(self):
-        print '''Set up a mirror server
+        print('''Set up a mirror server
 
 mrepo options:
   -c, --config=file       specify alternative configfile
@@ -173,7 +174,7 @@ mrepo options:
   -v, --verbose           increase verbosity
       --version           print mrepo version information
   -vv, -vvv, -vvvv..      increase verbosity more
-'''
+''')
 
 
 class Config(object):
@@ -244,22 +245,21 @@ class Config(object):
         self.update()
 
     def read(self, configfile):
-        self.cfg = ConfigParser.ConfigParser()
+        self.cfg = configparser.ConfigParser()
 
         info(4, 'Reading config file %s' % (configfile))
 
-        urlscheme = urlparse.urlparse(configfile)[0]
-        if urlscheme in ('http', 'ftp', 'file'):
-            configfh = urllib.urlopen(configfile)
+        if urllib.parse.urlsplit(configfile).scheme in ('http', 'ftp', 'file'):
+            configfh = urllib.request.urlopen(configfile)
             try:
-                self.cfg.readfp(configfh)
+                self.cfg.read_file(configfh)
             except IOError:
                 die(6, 'Error accessing URL: %s' % configfile)
         else:
             if os.access(configfile, os.R_OK):
                 try:
                     self.cfg.read(configfile)
-                except ConfigParser.MissingSectionHeaderError:
+                except configparser.MissingSectionHeaderError:
                     die(7, 'Syntax error reading file: %s' % configfile)
             else:
                 die(6, 'Error accessing file: %s' % configfile)
@@ -314,7 +314,7 @@ class Config(object):
                         else:
                             dist.repos.append(Repo(option, self.cfg.get(section, option), dist, self))
 
-                    dist.repos.sort(reposort)
+                    dist.repos.sort(key=attrgetter('name'))
                     dist.rewrite()
 
                     self.alldists.append(dist)
@@ -324,17 +324,17 @@ class Config(object):
                     else:
                         info(5, '%s: %s is disabled' % (dist.nick, dist.name))
 
-        self.alldists.sort(distsort)
-        self.dists.sort(distsort)
+        self.alldists.sort(key=attrgetter('nick'))
+        self.dists.sort(key=attrgetter('nick'))
 
     def getoption(self, section, option, var):
         "Get an option from a section from configfile"
         try:
             var = self.cfg.get(section, option)
             info(3, 'Setting option %s in section [%s] to: %s' % (option, section, var))
-        except ConfigParser.NoSectionError:
+        except configparser.NoSectionError:
             error(5, 'Failed to find section [%s]' % section)
-        except ConfigParser.NoOptionError:
+        except configparser.NoOptionError:
             info(5, 'Setting option %s in section [%s] to: %s (default)' % (option, section, var))
         return var
 
@@ -369,8 +369,8 @@ class Dist(object):
             'dist': self.dist,
             'release': self.release,
         })
-        for key, value in vars(self).iteritems():
-            if isinstance(value, types.StringType):
+        for key, value in vars(self).items():
+            if isinstance(value, str):
                 setattr(self, key, substitute(value, varlist))
         for repo in self.repos:
             varlist['repo'] = repo.name
@@ -480,7 +480,7 @@ class Repo(object):
         for url in self.url.split():
             try:
                 info(2, '%s: Mirror packages from %s to %s' % (self.dist.nick, url, self.srcdir))
-                scheme = urlparse.urlparse(url)[0]
+                scheme = urllib.parse.urlsplit(url).scheme
                 if scheme not in OPTIONS.types:
                     info(4, 'Ignoring mirror action for type %s' % scheme)
                     continue
@@ -506,13 +506,10 @@ class Repo(object):
         "Capture a list of packages in the repository"
         filelist = set()
 
-        def addfile((filelist, ), path, files):
-            for filename in files:
-                if path_exists(path_join(path, filename)) and filename.endswith('.rpm'):
-                    size = os.stat(path_join(path, filename)).st_size
-                    filelist.add((filename, size))
+        for filename in glob.glob(path_join(self.srcdir, '**/*.rpm'), recursive=True):
+            size = os.stat(filename).st_size
+            filelist.add((filename, size))
 
-        os.path.walk(self.srcdir, addfile, (filelist,))
         return filelist
 
     def check(self):
@@ -525,7 +522,7 @@ class Repo(object):
         if OPTIONS.force:
             pass
         elif os.path.isfile(sha1file):
-            oldsha1 = open(sha1file).read()
+            oldsha1 = readfile(sha1file)
             if cursha1 != oldsha1:
                 info(2, '%s: Repository %s has new packages.' % (self.dist.nick, self.name))
             else:
@@ -541,7 +538,7 @@ class Repo(object):
         sha1file = path_join(self.wwwdir, '.sha1sum')
         if os.path.isfile(sha1file + '.tmp'):
             cursha1 = sha1dir(self.wwwdir)
-            tmpsha1 = open(sha1file + '.tmp').read()
+            tmpsha1 = readfile(sha1file + '.tmp')
             remove(sha1file + '.tmp')
             if cursha1 == tmpsha1:
                 writesha1(sha1file, cursha1)
@@ -559,17 +556,17 @@ class Repo(object):
     def lock(self, action):
         if OPTIONS.dryrun:
             return True
-        lockfile = path_join(CONFIG.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
+        lockfile = path_join(CONFIG.lockdir, self.dist.nick, action + '-' + self.name + '.lock') # pylint: disable=possibly-used-before-assignment
         mkdir(os.path.dirname(lockfile))
         try:
-            file_object = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o0600)
+            file_descriptor = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o0600)
             info(6, '%s: Setting lock %s' % (self.dist.nick, lockfile))
-            os.write(file_object, '%d' % os.getpid())
-            os.close(file_object)
+            os.write(file_descriptor, b'%d' % os.getpid())
+            os.close(file_descriptor)
             return True
         except OSError:
             if path_exists(lockfile):
-                pid = open(lockfile).read()
+                pid = readfile(lockfile)
                 if path_exists('/proc/%s' % pid):
                     error(0, '%s: Found existing lock %s owned by pid %s' % (self.dist.nick, lockfile, pid))
                 else:
@@ -590,7 +587,7 @@ class Repo(object):
         lockfile = path_join(CONFIG.lockdir, self.dist.nick, action + '-' + self.name + '.lock')
         info(6, '%s: Removing lock %s' % (self.dist.nick, lockfile))
         if path_exists(lockfile):
-            pid = open(lockfile).read()
+            pid = readfile(lockfile)
             if pid == '%s' % os.getpid():
                 os.unlink(lockfile)
             else:
@@ -678,7 +675,7 @@ def sha1dir(directory):
     output = ''
     for filename in files:
         output = output + os.path.basename(filename) + ' ' + str(os.stat(filename).st_size) + '\n'
-    return sha1hash(output).hexdigest()
+    return sha1hash(output.encode('utf-8')).hexdigest()
 
 
 def writesha1(filename, sha1sum=None):
@@ -686,20 +683,21 @@ def writesha1(filename, sha1sum=None):
     repodir = os.path.dirname(filename)
     if not sha1sum:
         sha1sum = sha1dir(repodir)
-    if not OPTIONS.dryrun:
-        open(filename, 'w').write(sha1sum)
+    writefile(filename, sha1sum)
 
 
 def error(level, text):
     "Output error message"
     if level <= OPTIONS.verbose:
         sys.stderr.write('mrepo: %s\n' % text)
+        sys.stderr.flush()
 
 
 def info(level, text):
     "Output info message"
     if level <= OPTIONS.verbose:
         sys.stdout.write('%s\n' % text)
+        sys.stderr.flush()
 
 
 def die(ret, text):
@@ -725,22 +723,21 @@ def readfile(filename, size=0):
     if not os.path.isfile(filename):
         return None
     if size:
-        return open(filename, 'r').read(size)
-    return open(filename, 'r').read()
+        return open(filename, 'r', encoding='utf-8').read(size)
+    return open(filename, 'r', encoding='utf-8').read()
 
 
 def writefile(filename, text):
     if OPTIONS.dryrun:
         return
-    file_object = open(filename, 'w')
-    file_object.write(text)
-    file_object.close()
+    with open(filename, 'w', encoding='utf-8') as file_object:
+        file_object.write(text)
 
 
 def substitute(string, variables, recursion=0):
     "Substitute variables from a string"
     if recursion > 10:
-        raise RuntimeError, "variable substitution loop"
+        raise RuntimeError("variable substitution loop")
 
     def _substrepl(matchobj):
         value = variables.get(matchobj.group(1))
@@ -750,26 +747,6 @@ def substitute(string, variables, recursion=0):
 
     string = _SUBST_SUB(_substrepl, string)
     return string
-
-
-def distsort(a, b): # pylint: disable=invalid-name
-    return cmp(a.nick, b.nick)
-
-
-def reposort(a, b): # pylint: disable=invalid-name
-    return cmp(a.name, b.name)
-
-
-def vercmp(a, b): # pylint: disable=invalid-name
-    a = a.split('.')
-    b = b.split('.')
-    minlen = min(len(a), len(b))
-    for i in range(1, minlen):
-        if cmp(a[i], b[i]) < 0:
-            return -1
-        elif cmp(a[i], b[i]) > 0:
-            return 1
-    return cmp(len(a), len(b))
 
 
 def symlinkglob(text, *targets):
@@ -846,7 +823,7 @@ def copy(src, dst):
 
 def remove(filename):
     "Remove files or directories"
-    if isinstance(filename, types.StringType):
+    if isinstance(filename, str):
         if OPTIONS.dryrun:
             return
         if os.path.islink(filename):
@@ -855,18 +832,12 @@ def remove(filename):
             try:
                 os.rmdir(filename)
             except OSError:
-                os.path.walk(filename, removedir, ())
-                os.rmdir(filename)
+                shutil.rmtree(filename)
         elif os.path.isfile(filename) or os.path.islink(filename):
             os.unlink(filename)
     else:
         for name in filename:
             remove(name)
-
-
-def removedir(_, directory, files):
-    for filename in files:
-        remove(path_join(directory, filename))
 
 
 def mkdir(path):
@@ -1067,26 +1038,25 @@ def readconfig():
 
 def _next_none(iterator):
     try:
-        return iterator.next()
+        return next(iterator)
     except StopIteration:
         return None
 
 
-def synciter(a, b, key=None, keya=None, keyb=None): # pylint: disable=invalid-name
+def synciter(a, b, key=lambda x: x, keya=None, keyb=None):
     """returns an iterator that compares two ordered iterables a and b.
     If keya or keyb are specified, they are called with elements of the corresponding
     iterable. They should return a value that is used to compare two elements.
     If keya or keyb are not specified, they default to key or to the element itself,
     if key is None."""
 
-    if key is None:
-        key = lambda x: x
     if keya is None:
         keya = key
     if keyb is None:
         keyb = key
     a = iter(a)
     b = iter(b)
+
     aelem = _next_none(a)
     belem = _next_none(b)
     while not ((aelem is None) or (belem is None)):
@@ -1121,20 +1091,15 @@ def listrpms(directories, relative=''):
     if relative and not relative.endswith('/'):
         relative += '/'
 
-    def processdir(rpms, path, filenames):
-        final_path = path
-        if relative:
-            final_path = relpath(path, relative)
-        for filename in filenames:
-            filepath = path_join(path, filename)
-            if filename.endswith('.rpm') and path_exists(filepath) and not path_is_dir(filepath):
-                rpms.append((filename, final_path))
-
     rpms = []
     for directory in directories:
-        if not directory.startswith('/'):
-            directory = path_join(relative, directory)
-        os.path.walk(directory, processdir, rpms)
+        for filename in glob.glob(path_join(directory, '**/*.rpm'), recursive=True):
+            final_path = os.path.dirname(filename)
+            if relative:
+                final_path = relpath(final_path, relative)
+            if not path_is_dir(filename):
+                rpms.append((os.path.basename(filename), final_path))
+
     rpms.sort()
     return rpms
 
@@ -1152,7 +1117,7 @@ def listrpmlinks(directory):
 
 def main():
     ### Check availability of commands
-    for cmd in CONFIG.cmd:
+    for cmd in CONFIG.cmd: # pylint: disable=consider-using-dict-items
         if not CONFIG.cmd[cmd]:
             continue
         cmdlist = CONFIG.cmd[cmd].split()
@@ -1230,7 +1195,7 @@ def main():
                         len(new),
                         len(removed),
                     ))
-                    file_object = open(CONFIG.logfile, 'a+')
+                    file_object = open(CONFIG.logfile, 'a+', encoding='utf-8')
                     date = time.strftime("%b %d %H:%M:%S", time.gmtime())
 
                     def sortedlist(pkgs):
@@ -1292,10 +1257,6 @@ def main():
 
         dist.genmetadata()
 
-
-### Unbuffered sys.stdout
-sys.stdout = os.fdopen(1, 'w', 0)
-sys.stderr = os.fdopen(2, 'w', 0)
 
 ### Main entrance
 if __name__ == '__main__':
