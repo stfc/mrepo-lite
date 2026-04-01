@@ -3,6 +3,7 @@
 import os
 import os.path
 from os.path import join as path_join
+from collections import namedtuple
 
 import unittest
 from shutil import rmtree
@@ -226,8 +227,22 @@ class Testlinksync(unittest.TestCase):
     def test_linksync_mod(self):
         self.dist.linksync(self.repo)
 
+    def test_call_hook(self):
+        # pylint: disable=protected-access
+        mrepo.CONFIG = namedtuple('Config', ['hooks'])
+        mrepo.CONFIG.hooks = {
+            'pass' : 'echo',
+            'fail' : 'false',
+        }
+        repo = self.repo
+        self.assertIsNone(repo._call_hook('undefined'))
+        self.assertTrue(repo._call_hook('pass'))
+        self.assertFalse(repo._call_hook('fail'))
+
+
 def _Testlinksync__touch(filename): # pylint: disable=invalid-name
     open(filename, 'a')
+
 
 
 if __name__ == '__main__':
