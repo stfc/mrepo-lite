@@ -607,7 +607,6 @@ class Repo(object):
 
     def createmd(self):
         global EXITCODE # pylint: disable=global-statement
-        metadata = ('createrepo', 'repomd')
 
         if not self.changed and not OPTIONS.force:
             return
@@ -1107,11 +1106,9 @@ def synciter(a, b, key=None, keya=None, keyb=None): # pylint: disable=invalid-na
             aelem = _next_none(a)
     # rest
     while aelem is not None:
-        akey = key(aelem)
         yield aelem, None
         aelem = _next_none(a)
     while belem is not None:
-        bkey = key(belem)
         yield None, belem
         belem = _next_none(b)
 
