@@ -722,9 +722,10 @@ def readfile(filename, size=0):
     "Return content of a file"
     if not os.path.isfile(filename):
         return None
-    if size:
-        return open(filename, 'r', encoding='utf-8').read(size)
-    return open(filename, 'r', encoding='utf-8').read()
+    with open(filename, 'r', encoding='utf-8') as file_object:
+        if size:
+            return file_object.read(size)
+        return file_object.read()
 
 
 def writefile(filename, text):
@@ -1195,7 +1196,6 @@ def main():
                         len(new),
                         len(removed),
                     ))
-                    file_object = open(CONFIG.logfile, 'a+', encoding='utf-8')
                     date = time.strftime("%b %d %H:%M:%S", time.gmtime())
 
                     def sortedlist(pkgs):
@@ -1206,35 +1206,36 @@ def main():
                     def formatlist(pkglist):
                         return '\n\t' + '\n\t'.join([elem[0] for elem in pkglist])
 
-                    if new:
-                        pkglist = sortedlist(new)
-                        info(4, '%s: New packages: %s' % (dist.nick, formatlist(pkglist)))
-                        distnew += len(pkglist)
-                        for element in pkglist:
-                            file_object.write('%s %s/%s Added %s (%d kiB)\n' % (
-                                date,
-                                dist.nick,
-                                repo.name,
-                                element[0],
-                                element[1] / 1024,
-                            ))
-                            msg = msg + '\n\t\t+ %s (%d kiB)' % (element[0], element[1] / 1024)
 
-                    if removed:
-                        pkglist = sortedlist(removed)
-                        info(4, '%s: Removed packages: %s' % (dist.nick, formatlist(pkglist)))
-                        distremoved += len(pkglist)
-                        for element in pkglist:
-                            file_object.write('%s %s/%s Removed %s (%d kiB)\n' % (
-                                date,
-                                dist.nick,
-                                repo.name,
-                                element[0],
-                                element[1] / 1024,
-                            ))
-                            msg = msg + '\n\t\t- %s (%d kiB)' % (element[0], element[1] / 1024)
+                    with open(CONFIG.logfile, 'a+', encoding='utf-8') as file_object:
+                        if new:
+                            pkglist = sortedlist(new)
+                            info(4, '%s: New packages: %s' % (dist.nick, formatlist(pkglist)))
+                            distnew += len(pkglist)
+                            for element in pkglist:
+                                file_object.write('%s %s/%s Added %s (%d kiB)\n' % (
+                                    date,
+                                    dist.nick,
+                                    repo.name,
+                                    element[0],
+                                    element[1] / 1024,
+                                ))
+                                msg = msg + '\n\t\t+ %s (%d kiB)' % (element[0], element[1] / 1024)
 
-                    file_object.close()
+                        if removed:
+                            pkglist = sortedlist(removed)
+                            info(4, '%s: Removed packages: %s' % (dist.nick, formatlist(pkglist)))
+                            distremoved += len(pkglist)
+                            for element in pkglist:
+                                file_object.write('%s %s/%s Removed %s (%d kiB)\n' % (
+                                    date,
+                                    dist.nick,
+                                    repo.name,
+                                    element[0],
+                                    element[1] / 1024,
+                                ))
+                                msg = msg + '\n\t\t- %s (%d kiB)' % (element[0], element[1] / 1024)
+
                     repo.changed = True
 
             if distnew or distremoved:
