@@ -1009,6 +1009,8 @@ def mirrorreposync(url, path, reponame, dist):
     if CONFIG.reposyncminrate:
         reposync_conf_contents += "minrate=%s\n" % CONFIG.reposyncminrate
 
+    # Only mirror packages exactly matching arch
+    reposync_conf_contents += "includepkgs=*.%s\n" % dist.arch
 
     (file_object, reposync_conf_file) = tempfile.mkstemp(text=True)
     handle = os.fdopen(file_object, 'w')
