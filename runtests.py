@@ -1,4 +1,5 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
+# pylint: disable=consider-using-f-string
 
 import os
 import os.path
@@ -87,7 +88,7 @@ class Testlinksync(unittest.TestCase):
 
         # __touch is unittest magic:
         # pylint: disable=undefined-variable
-        for i in xrange(4):
+        for i in range(4):
             __touch(path_join(srcdir, str(i) + '.rpm'))
         __touch(path_join(srcdir, 'dontsync.txt'))
 
@@ -116,7 +117,7 @@ class Testlinksync(unittest.TestCase):
 
         # for safety-reasons:
         if tmpdir.count('/') < 2:
-            raise Exception("Will not remove tmpdir %s" % tmpdir)
+            raise Exception("Will not remove tmpdir %s" % tmpdir) # pylint: disable=broad-exception-raised
 
         rmtree(tmpdir)
 
@@ -227,7 +228,7 @@ class Testlinksync(unittest.TestCase):
         self.dist.linksync(self.repo)
 
 def _Testlinksync__touch(filename): # pylint: disable=invalid-name
-    open(filename, 'a')
+    open(filename, 'a', encoding='utf-8').close()
 
 
 if __name__ == '__main__':
