@@ -4,5 +4,6 @@ It takes care of downloading packages and generating metadata
 Packages can be download by various means using ftp, http, rsync, reposync or sftp.
 
 This fork of mrepo is only designed to support the running of mirror servers.
+At RAL it is used together with https://github.com/stfc/zfs-periodic-snapshots to provide immutable, point-in-time, snapshots of software repositories.
 
 For updating your local systems, configure either yum, dnf or apt and point them to your local mrepo server.
